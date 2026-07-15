@@ -19,18 +19,18 @@ public class TargetCommand {
         return Commands.literal("target")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if (plugin.gameInstance.getPlayer(player.getName()) == null) {
+                    if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
                         player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    plugin.gameInstance.setPlayerTarget(plugin.gameInstance.getPlayer(player.getName()), null);
+                    plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), null);
                     player.sendMessage(Component.text("You are no longer targeting anyone", NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;
             })
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.gameInstance.getPlayerNames()) {
+                            for (String name : plugin.gameInstance.getWWPlayerNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -40,15 +40,15 @@ public class TargetCommand {
                                         StringArgumentType.getString(ctx, "name");
 
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if (plugin.gameInstance.getPlayer(player.getName()) == null) {
+                    if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
                         player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if (!plugin.gameInstance.getPlayerNames().contains(name)) {
+                    if (!plugin.gameInstance.getWWPlayerNames().contains(name)) {
                         player.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if(plugin.gameInstance.setPlayerTarget(plugin.gameInstance.getPlayer(player.getName()), plugin.gameInstance.getPlayer(name))) {
+                    if(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name))) {
                         player.sendMessage(Component.text("You are now targeting " + name, NamedTextColor.GREEN));
                     }else {
                         player.sendMessage(Component.text("You are already targeting " + name, NamedTextColor.RED));

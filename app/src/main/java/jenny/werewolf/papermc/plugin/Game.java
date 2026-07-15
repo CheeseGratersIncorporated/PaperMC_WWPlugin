@@ -8,6 +8,14 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+
+import org.bukkit.potion.PotionEffectType;
+
+import com.google.common.util.concurrent.AbstractScheduledService.Scheduler;
+
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,7 +25,7 @@ public class Game {
     private ArrayList<WWPlayer> players;
     Map<String, WWPlayer> playerMap = new HashMap<>();
     Map<String, Integer> roles = new HashMap<>();
-    private Scheduler scheduler;
+    private Handler handler;
     private int WWPlayerCount, aliveCount;
     private boolean isGameActive = false;
     private ExamplePlugin plugin;
@@ -26,7 +34,7 @@ public class Game {
         this.plugin = plugin;
         this.players = new ArrayList<>();
         this.roles = new HashMap<>();
-        this.scheduler = new Scheduler(this,plugin);
+        this.handler = new Handler(this,plugin);
     }
     public void startGame() {
         isGameActive = true;
@@ -60,6 +68,7 @@ public class Game {
                 WWPlayer.setRole(roleInstancesList.get(i));
                 i++;
             }
+            WWPlayer.getRole().player=WWPlayer;
         }
         
         
@@ -73,7 +82,7 @@ public class Game {
         //on complete
         () -> {
             
-            scheduler.initPhase(GamePhase.DUSK);
+            handler.initPhase(GamePhase.DUSK);
         }, 
         //on tick
         (timeLeft) -> {
@@ -88,7 +97,7 @@ public class Game {
         aliveCount--;
     }
     public boolean canVote(){
-        return scheduler.currentPhase == GamePhase.VOTING;
+        return handler.currentPhase == GamePhase.VOTING;
     }
     public boolean setWWPlayerTarget(WWPlayer WWPlayer, WWPlayer target) {
         if(WWPlayer.getTarget() == target) return false;
@@ -150,7 +159,7 @@ public class Game {
         return WWPlayer != null ? WWPlayer.getRole() : null;
     }
     public void flushEvents() {
-        scheduler.flushEvents();
+        handler.flushEvents();
     }
     
 }
@@ -177,190 +186,4 @@ enum GamePhase {
     NIGHT, 
     POST_NIGHT, //werewolves punch ppl
     DAWN, //doors unlock
-}
-class Scheduler{
-    GamePhase currentPhase;
-    GamePhase nextPhase;
-    Game game;
-    ExamplePlugin plugin;
-    int dayCount=1;
-    public Scheduler(Game game, ExamplePlugin plugin) {
-        this.game = game;
-        this.plugin = plugin;
-    }
-    //smaller priority goes first
-        PriorityQueue<GameEvent> EventQueue = new PriorityQueue<>(
-              Comparator.comparingInt(GameEvent::getPriority)
-        );
-    public void flushEvents(){
-        
-    }
-
-    public void initPhase(GamePhase phase) {
-        this.currentPhase = phase;
-        //REMINDER: kill timers
-        switch(phase) {
-            case DISCUSSION:
-                // Initialize discussion phase
-                
-                plugin.setWorldTime(6000L);
-                plugin.timerInstance.start(
-                    Times.DISCUSSION, 
-                    BossBar.bossBar(
-                        Component.text("DISCUSSION - DAY " + dayCount, NamedTextColor.YELLOW),
-                        1.0f,
-                        BossBar.Color.YELLOW,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.VOTING);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-
-                    });
-                break;
-            case VOTING:
-                // Initialize voting phase
-                for (WWPlayer WWPlayer : game.getWWPlayerList()) {
-                    WWPlayer.setVotedFor(null);
-                    WWPlayer.clearVotes();
-                }
-                plugin.timerInstance.start(
-                    Times.VOTING, 
-                    BossBar.bossBar(
-                        Component.text("VOTING - DAY " + dayCount, NamedTextColor.GREEN),
-                        1.0f,
-                        BossBar.Color.GREEN,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.DUSK);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-
-                    });
-                break;
-            case DEFENSE:
-                // Initialize defense phase
-                break;
-            case JUDGMENT:
-                // Initialize judgment phase
-                break;
-            case SENTENCE:
-                // Initialize sentence phase
-                break;
-            case DUSK:
-                // Initialize dusk phase
-                for (WWPlayer WWPlayer : game.getWWPlayerList()) {
-                    WWPlayer.getRole().dayAbility();
-                }
-                flushEvents();
-                plugin.timerInstance.start(
-                    Times.DUSK, 
-                    BossBar.bossBar(
-                        Component.text("Night is falling...", NamedTextColor.DARK_PURPLE),
-                        1.0f,
-                        BossBar.Color.PURPLE,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.NIGHT);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-                        plugin.setWorldTime((long)((1- (float)timeLeft / (Times.DUSK * 20)) * 12000L + 6000L));
-                    });
-                break;
-            case NIGHT:
-                // Initialize night phase
-                plugin.setWorldTime(18000L);
-                plugin.timerInstance.start(
-                    Times.NIGHT, 
-                    BossBar.bossBar(
-                        Component.text("NIGHT " + dayCount, NamedTextColor.BLUE),
-                        1.0f,
-                        BossBar.Color.BLUE,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.DAWN);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-
-                    });
-                break;
-            case POST_NIGHT:
-                // Initialize night phase
-                plugin.setWorldTime(18000L);
-                plugin.timerInstance.start(
-                    Times.POST_NIGHT, 
-                    BossBar.bossBar(
-                        Component.text("Dawn breaks... " + dayCount, NamedTextColor.DARK_PURPLE),
-                        1.0f,
-                        BossBar.Color.PURPLE,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.DAWN);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-                        plugin.setWorldTime((long)((1- (float)timeLeft / (Times.POST_NIGHT * 20)) * 5000L + 18000L));
-                    });
-                break;
-            case DAWN:
-                // Initialize dawn phase
-                for (WWPlayer WWPlayer : game.getWWPlayerList()) {
-                    WWPlayer.getRole().nightAbility();
-                }
-                flushEvents();
-                dayCount++; 
-                plugin.timerInstance.start(
-                    Times.DAWN, 
-                    BossBar.bossBar(
-                        Component.text("Cock-a-doodley-doo mfs", NamedTextColor.YELLOW),
-                        1.0f,
-                        BossBar.Color.YELLOW,
-                        BossBar.Overlay.PROGRESS
-                    ), 
-                    game, 
-                    //on complete
-                    () -> {
-                        
-                        initPhase(GamePhase.DISCUSSION);
-                    }, 
-                    //on tick
-                    (timeLeft) -> {
-                        plugin.setWorldTime((long)((1- (float)timeLeft / (Times.DAWN * 20)) * 7000L + 23000L));
-                    });
-                break;
-        }
-        game.flushEvents();
-    }
-}
-
-class GameEvent{
-    int priority;
-    public int getPriority() {
-        return priority;
-    }
-
 }

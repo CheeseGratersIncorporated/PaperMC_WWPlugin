@@ -128,11 +128,9 @@ public class RotatingGhostBeam {
 
     public void addViewer(Player viewer) {
         viewers.add(viewer);
-        refreshVisibility();
     }
     public void removeViewer(Player viewer) {
         viewers.remove(viewer);
-        refreshVisibility();
     }
     public void refreshVisibility(){
         

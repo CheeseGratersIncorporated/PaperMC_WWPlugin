@@ -19,6 +19,10 @@ public class ClaimCommand {
         return Commands.literal("claim")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
+                    if(plugin.gameInstance.getWWPlayer(player.getName())==null){
+                        player.sendMessage(Component.text("You are not in the game.", NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     if (!plugin.housingManager.claim(player)) {
                         player.sendMessage(Component.text("Claim failed.", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
@@ -38,11 +42,15 @@ public class ClaimCommand {
                 String name = StringArgumentType.getString(ctx, "name");
                 
                 if (ctx.getSource().getSender() instanceof Player player) {
+                    if(plugin.gameInstance.getWWPlayer(player.getName())==null){
+                        player.sendMessage(Component.text("You are not in the game.", NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
                     if(!plugin.housingManager.getHouseNames().contains(name)){
                     player.sendMessage(Component.text("House not found!", NamedTextColor.RED));
                     
                     return Command.SINGLE_SUCCESS;
-                }
+                    }
                     if (plugin.housingManager.claim(player,name)) {
                         player.sendMessage(Component.text("You have claimed " + plugin.housingManager.getPlayerClaim(player), NamedTextColor.GREEN));
                     } else {

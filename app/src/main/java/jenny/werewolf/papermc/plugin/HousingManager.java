@@ -8,22 +8,12 @@ import org.bukkit.entity.BlockDisplay;
 import org.bukkit.Location;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.Display;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
-import org.joml.Vector3f;
 
-import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-
+import java.util.HashSet;
 
 
 import org.bukkit.configuration.file.FileConfiguration;
@@ -33,13 +23,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 
 
 public class HousingManager {
     ExamplePlugin plugin;
-    ArrayList<Player> viewers = new ArrayList<Player>();
-    ArrayList<House> houses = new ArrayList<House>();
+    Set<Player> viewers = new HashSet<Player>();
+    Set<House> houses = new HashSet<House>();
     Map<String, House> houseMap = new HashMap<>();
     Map<String, House> ownerMap = new HashMap<>();
     Map<String, House> hoverMap = new HashMap<>();
@@ -60,17 +51,25 @@ public class HousingManager {
 
     public void refreshVisibility() {
         for (House house : houses) {
-            for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+            for (Player player : viewers) {
                 
-                if (house.beam != null && house.owner==null) {
-                    if (viewers.contains(player)) {
+                if (house.beam != null) {
+                    if(house.owner==null && !house.hovered){
                         house.beam.addViewer(player);
                     } else {
                         house.beam.removeViewer(player);
                     }
                 }
+                if (house.hoverBeam != null) {
+                    if(house.owner==null && house.hovered){
+                        house.hoverBeam.addViewer(player);
+
+                    } else {
+                        house.hoverBeam.removeViewer(player);
+                    }
+                }
                 if (house.ownerBeam != null ) {
-                    if (house.owner!=null&&viewers.contains(player)&& house.owner.getName()==(player.getName())) {
+                    if (house.owner!=null&& house.owner.getName()==(player.getName())) {
                         house.ownerBeam.addViewer(player);
                     } else {
                         house.ownerBeam.removeViewer(player);
@@ -78,13 +77,17 @@ public class HousingManager {
                 }
                 
                 if (house.claimedBeam != null) {
-                    if (house.owner!=null&&viewers.contains(player)&&house.owner.getName()!=(player.getName())) {
+                    if (house.owner!=null&&house.owner.getName()!=(player.getName())) {
                         house.claimedBeam.addViewer(player);
                     } else {
                         house.claimedBeam.removeViewer(player);
                     }
                 }
             }
+            house.beam.refreshVisibility();
+            house.hoverBeam.refreshVisibility();
+            house.ownerBeam.refreshVisibility();
+            house.claimedBeam.refreshVisibility();
         }
     }
 
@@ -117,6 +120,7 @@ public class HousingManager {
                     ownerMap.get(player.getName()).owner=null;
                 }
                 house.owner=plugin.gameInstance.getWWPlayer(player.getName());
+                plugin.gameInstance.getWWPlayer(player.getName()).setHouse(house);
                 ownerMap.put(player.getName(),house);
                 updateHover(player);
                 refreshVisibility();
@@ -133,6 +137,8 @@ public class HousingManager {
                     ownerMap.get(player.getName()).owner=null;
                 }
                 h.owner=plugin.gameInstance.getWWPlayer(player.getName());;
+                
+                plugin.gameInstance.getWWPlayer(player.getName()).setHouse(h);
                 ownerMap.put(player.getName(),h);
                 updateHover(player);
                 
@@ -167,12 +173,18 @@ public class HousingManager {
                 if (house.hoverBeam != null) {
                     house.hoverBeam.remove();
                 }
+                if (house.ownerBeam != null) {
+                    house.ownerBeam.remove();
+                }
+                if (house.claimedBeam != null) {
+                    house.claimedBeam.remove();
+                }
         refreshVisibility();
         
     }
 
     public void updateHover(Player player){
-        String uuid=player.getName();
+        String name=player.getName();
         
         for(House house : houses){
             if(house.owner!=null){
@@ -181,27 +193,24 @@ public class HousingManager {
             }
             if(player.getLocation().getBlockX()==house.location.getBlockX()
                 &&player.getLocation().getBlockZ()==house.location.getBlockZ()){
-                    if(hoverMap.containsKey(uuid)&&hoverMap.get(uuid).name!=house.name){
-                            hoverMap.get(uuid).hoverBeam.removeViewer(player);
-                            if(viewers.contains(player))
-                            hoverMap.get(uuid).beam.addViewer(player);
-                        }
-                    hoverMap.put(uuid,house);
-                    if(viewers.contains(player)){
-                        
-                        house.hoverBeam.addViewer(player);
-                        house.beam.removeViewer(player);
-                    }
+                    
+                    hoverMap.put(name,house);
+                    house.hovered=true;
+                                                    player.sendMessage(Component.text("trued", NamedTextColor.YELLOW));
+
+                    refreshVisibility();
             }else {
-                if(hoverMap.containsKey(uuid)){
-                    if(player.getLocation().getBlockX()!=hoverMap.get(uuid).location.getBlockX()
-                        ||player.getLocation().getBlockZ()!=hoverMap.get(uuid).location.getBlockZ()){
-                            if(viewers.contains(player)){
-                                
-                                hoverMap.get(uuid).hoverBeam.removeViewer(player);
-                                hoverMap.get(uuid).beam.addViewer(player);
+                if(hoverMap.containsKey(name)&&hoverMap.get(name)==house){
+                    if(player.getLocation().getBlockX()!=hoverMap.get(name).location.getBlockX()
+                        ||player.getLocation().getBlockZ()!=hoverMap.get(name).location.getBlockZ()){
+                            
+                            hoverMap.remove(name);
+                            if(!hoverMap.values().contains(house)){
+                                house.hovered=false;
+                                player.sendMessage(Component.text("falsed", NamedTextColor.YELLOW));
+                    
                             }
-                            hoverMap.remove(uuid);
+                            refreshVisibility();
                     }
                 }
             }

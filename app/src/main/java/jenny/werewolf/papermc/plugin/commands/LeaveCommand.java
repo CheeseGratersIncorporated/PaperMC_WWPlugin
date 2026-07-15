@@ -18,11 +18,11 @@ public class LeaveCommand {
         return Commands.literal("leave")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if (plugin.gameInstance.getPlayer(player.getName()) == null) {
+                    if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
                         player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    plugin.gameInstance.removePlayer(player.getName());
+                    plugin.gameInstance.removeWWPlayer(player.getName());
                     player.sendMessage(Component.text("You have left the game!", NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;

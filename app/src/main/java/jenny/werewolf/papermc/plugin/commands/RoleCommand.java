@@ -18,16 +18,16 @@ public class RoleCommand {
         return Commands.literal("role")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if (plugin.gameInstance.getPlayer(player.getName()) == null) {
+                    if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
                         player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if (plugin.gameInstance.getPlayerRole(player.getName()) == null) {
+                    if (plugin.gameInstance.getWWPlayerRole(player.getName()) == null) {
                         player.sendMessage(Component.text("You do not have a role assigned!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
                     // Additional role command logic here
-                    String roleName = plugin.gameInstance.getPlayerRole(player.getName()).getName();
+                    String roleName = plugin.gameInstance.getWWPlayerRole(player.getName()).getName();
                     player.sendMessage(Component.text("Your role is: " + roleName, NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;

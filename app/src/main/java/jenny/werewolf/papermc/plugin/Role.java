@@ -1,10 +1,19 @@
 package jenny.werewolf.papermc.plugin;
 
+import java.beans.EventHandler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import java.util.function.Supplier;
+
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
+
+import net.kyori.adventure.text.Component;
+
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public abstract class Role {
     private static final Map<String, Supplier<Role>> ROLES = new HashMap<>();
@@ -26,9 +35,13 @@ public abstract class Role {
     public static Role create(String name) {
         return ROLES.get(name.toLowerCase()).get();
     }
+    public boolean werewolf=true;
+    public int def=0,atk=0;
+    public boolean doctored=false;
+    public WWPlayer player;
     public abstract String getName();
-    public abstract void dayAbility(); //trigger on end of day
-    public abstract void nightAbility(); //trigger on end of night
+    public abstract void dayAbility(Handler handler); //trigger on end of day
+    public abstract void nightAbility(Handler handler); //trigger on end of night
     public abstract void immediateAbility(); //trigger immediately, check params within
 }
 
@@ -37,12 +50,12 @@ class Townie extends Role {
         return "townie";
     }
     @Override
-    public void dayAbility() {
+    public void dayAbility(Handler handler) {
         // Townie's ability logic here
     }
 
     @Override
-    public void nightAbility() {
+    public void nightAbility(Handler handler) {
         // Townie's night ability logic here
     }
 
@@ -53,17 +66,26 @@ class Townie extends Role {
 }
 
 class Werewolf extends Role {
+    public Werewolf(){
+        this.werewolf=true;
+        this.atk=1;
+    }
     public String getName() {
         return "werewolf";
     }
     @Override
-    public void dayAbility() {
+    public void dayAbility(Handler handler) {
         // Werewolf's ability logic here
     }
 
     @Override
-    public void nightAbility() {
-        // Werewolf's night ability logic here
+    public void nightAbility(Handler handler) {
+        handler.pushEvent(WWEvent.of(100,
+            ()->{
+                player.getTarget().addVote();
+                handler.maxWolfVote=Math.max(player.getTarget().getVote(),handler.maxWolfVote);
+            }));
+        
     }
 
     @Override
@@ -77,13 +99,25 @@ class Sheriff extends Role {
         return "sheriff";
     }
     @Override
-    public void dayAbility() {
+    public void dayAbility(Handler handler) {
         // Sheriff's ability logic here
     }
 
     @Override
-    public void nightAbility() {
-        // Sheriff's night ability logic here
+    public void nightAbility(Handler handler) {
+        handler.pushEvent(WWEvent.of(70,
+            ()->{
+            for(Player p : Bukkit.getServer().getOnlinePlayers()){
+            if(p.getName()==player.getName()){
+                if(player.getTarget().getRole().werewolf)
+                    p.sendMessage(Component.text("Your target is a sussy baka", NamedTextColor.AQUA));
+                else
+                    p.sendMessage(Component.text("Your target is not a sussy baka", NamedTextColor.AQUA));
+
+            }
+        }
+        }));
+        
     }
 
     @Override
@@ -93,18 +127,26 @@ class Sheriff extends Role {
 }
 
 class Doctor extends Role {
+
     public String getName() {
         return "doctor";
     }
 
     @Override
-    public void dayAbility() {
+    public void dayAbility(Handler handler) {
         // Doctor's ability logic here
     }
 
     @Override
-    public void nightAbility() {
-        // Doctor's night ability logic here
+    public void nightAbility(Handler handler) {
+        handler.pushEvent(WWEvent.of(100,
+            ()->{
+            player.getTarget().getRole().doctored=true;
+        }));
+        handler.pushEvent(WWEvent.of(0,
+            ()->{
+            player.getTarget().getRole().doctored=false;
+        }));
     }
 
     @Override
