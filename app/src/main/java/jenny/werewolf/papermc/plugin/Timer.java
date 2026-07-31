@@ -72,11 +72,12 @@ public class Timer {
         };
         task.runTaskTimer(plugin, 0L, 1L);
     }
-    public void stop(BossBar bossBar) {
+    public void stop() {
         if (task != null) {
             task.cancel();
             task = null;
         }
+        if(bossBar!=null)
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.hideBossBar(bossBar);
         }

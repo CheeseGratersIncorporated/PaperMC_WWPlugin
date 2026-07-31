@@ -1,25 +1,89 @@
 package jenny.werewolf.papermc.plugin.commands;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import jenny.werewolf.papermc.plugin.Role;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
-
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.GameRules;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WWPlayer;
+import jenny.werewolf.papermc.plugin.House;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title.Times;
+import net.kyori.adventure.bossbar.BossBar;
+
+import org.bukkit.Sound;
+import org.bukkit.block.Biome;
+
 
 public class StartCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("start")
             .executes(ctx -> {
                     
-            
-                plugin.gameInstance.startGame();
+             plugin.setBiomeVolume(plugin.sceneManager.getLocation("town_corner1"),plugin.sceneManager.getLocation("town_corner2"),plugin.fogBiome);
+                for(House h: plugin.housingManager.getHouses()){
+                    if(h.lectern!=null){
+                        plugin.inventoryManager.wipeLecternBook(h.lectern);
+                    }
+                }
+                plugin.timerInstance.start(
+                    5, 
+                    BossBar.bossBar(
+                        Component.text("Werewolf Game Starting...", NamedTextColor.RED),
+                        1.0f,
+                        BossBar.Color.RED,
+                        BossBar.Overlay.PROGRESS
+                    ), 
+                    plugin.gameInstance, 
+                    //on complete
+                    () -> {
+                        
+                        plugin.gameInstance.startGame();
+                    }, 
+                    //on tick
+                    (timeLeft) -> {
+
+                    });
+                            for(Player p : Bukkit.getServer().getOnlinePlayers()){
+                                for (Player viewer : Bukkit.getOnlinePlayers()) {
+                        viewer.showPlayer(plugin, p);
+                    
+                                    }
+                                p.playSound(
+                                        p.getLocation(),
+                                        Sound.BLOCK_END_PORTAL_SPAWN,
+                                        1.0f,  // volume
+                                        1.0f   // pitch
+                                );
+                                p.getWorld().setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+                                p.getWorld().setGameRule(GameRules.PVP, true);
+                                
+                                p.getInventory().clear();
+                                p.setGameMode(GameMode.ADVENTURE);
+                                p.setAllowFlight(false);
+                                p.setInvisible(false);
+                                p.kill();
+
+                                p.addPotionEffect(
+                                                    new PotionEffect(
+                                                        PotionEffectType.BLINDNESS,
+                                                        20 * 3, // 10 seconds (20 ticks = 1 second)
+                                                        255,       // amplifier
+                                                        false,   // ambient
+                                                        false,   // particles
+                                                        false    // icon
+                                                    )
+                                                );
+                                    }
                 return Command.SINGLE_SUCCESS;
             });
     }

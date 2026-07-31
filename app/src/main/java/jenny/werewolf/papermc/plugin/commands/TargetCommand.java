@@ -1,18 +1,18 @@
 package jenny.werewolf.papermc.plugin.commands;
 
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import jenny.werewolf.papermc.plugin.Role;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
-
 import org.bukkit.entity.Player;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WWPlayer;
+import jenny.werewolf.papermc.plugin.Role;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class TargetCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
@@ -30,8 +30,13 @@ public class TargetCommand {
             })
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.gameInstance.getWWPlayerNames()) {
-                                builder.suggest(name);
+                            if (ctx.getSource().getSender() instanceof Player player) {
+                                WWPlayer wwp=plugin.gameInstance.getWWPlayer(player.getName());
+                                for (String name : plugin.gameInstance.getWWPlayerNames()) {
+                                    if(wwp.getRole().checkTarget(plugin.gameInstance.getWWPlayer(name)))
+                                    builder.suggest(name);
+                                }
+                                
                             }
                             return builder.buildFuture();
                         })
@@ -48,11 +53,14 @@ public class TargetCommand {
                         player.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name))) {
-                        player.sendMessage(Component.text("You are now targeting " + name, NamedTextColor.GREEN));
-                    }else {
-                        player.sendMessage(Component.text("You are already targeting " + name, NamedTextColor.RED));
-                    }
+
+                    // if(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name))) {
+                    //     player.sendMessage(Component.text("You are now targeting " + name, NamedTextColor.GREEN));
+                    // }else {
+                    //     player.sendMessage(Component.text("You are already targeting " + name, NamedTextColor.RED));
+                    // }
+
+                    player.sendMessage(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name)));
                 }
                 return Command.SINGLE_SUCCESS;
             }));

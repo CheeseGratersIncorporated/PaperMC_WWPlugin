@@ -3,6 +3,12 @@ package jenny.werewolf.papermc.plugin;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import java.util.Set;
+
 public class WWPlayer {
     
     private String name;
@@ -12,6 +18,11 @@ public class WWPlayer {
     private int voteCount = 0;
     private WWPlayer target =null;
     private House house=null;
+    private int judgment=0;
+    private WWPlayer specPlayer=null;
+    private Set<WWPlayer> privateChatPlayers; 
+    private boolean privateChat=false;
+    private Component privateChatPrefix=Component.text("");
 
     public WWPlayer(String name, Role role) {
         this.name = name;
@@ -29,8 +40,8 @@ public class WWPlayer {
         this.role = role;
     }
 
-    public void setHouse(House house){
-    this.house=house;
+    public void setHouse(House h){
+        house=h;
     }
 
     public House getHouse(){
@@ -48,14 +59,36 @@ public class WWPlayer {
         return killed;
     }
     public void kill(){
-        killed=true;
-        for(Player p : Bukkit.getServer().getOnlinePlayers()){
-            if(p.getName()==getName()){
-                p.kill();
-                p.setAllowFlight(true);
-                p.setInvisible(true);
+        
+        
+        for(Player player : Bukkit.getServer().getOnlinePlayers()){
+            if(player.getName().equals(getName())){
+                
+                player.setAllowFlight(true);
+                player.setFlying(true);
+
+                player.setInvulnerable(true);
+                player.setInvisible(true);
+                player.setCanPickupItems(false);
+                player.setCollidable(false);
+                player.setSilent(true);
+                // player.getInventory().clear();
             }
         }
+        
+        killed=true;
+    }
+    public void setSpecPlayer(WWPlayer wwp){
+        specPlayer=wwp;
+    }
+    public WWPlayer getSpecPlayer(){
+        return specPlayer;
+    }
+    public void setJudgment(int j){
+        judgment=j;
+    }
+    public int getJudgment(){
+        return judgment;
     }
 
     public void setTarget(WWPlayer target) {
@@ -89,5 +122,25 @@ public class WWPlayer {
     }
     public void setAlive(boolean alive) {
         isAlive = alive;
+    }
+
+    public boolean getPrivateChat(){
+        return privateChat;
+    }
+    public void setPrivateChat(boolean b){
+        privateChat=b;
+    }
+    public void setPrivateChatPlayers(Set<WWPlayer> s){
+        privateChatPlayers=s;
+    }
+    public Set<WWPlayer> getPrivateChatPlayers(){
+        return privateChatPlayers;
+    }
+    public void setPrivateChatPrefix(Component c){
+        privateChatPrefix=c;
+
+    }
+    public Component getPrivateChatPrefix(){
+        return privateChatPrefix;
     }
 }

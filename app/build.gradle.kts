@@ -13,6 +13,11 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+
+    maven {
+        name = "maxhenkel"
+        url = uri("https://maven.maxhenkel.de/repository/public")
+    }
     maven {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
@@ -21,8 +26,11 @@ repositories {
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    // compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     
+    implementation("de.maxhenkel.voicechat:voicechat-api:2.6.0")
+
     testImplementation(libs.junit.jupiter)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
