@@ -23,9 +23,13 @@ public class Timer {
     private final JavaPlugin plugin;
     private BukkitRunnable task;
     private BossBar bossBar;
+    public boolean kill =false;
 
     public Timer(JavaPlugin plugin) {
         this.plugin = plugin;
+    }
+    public boolean getKill(){
+        return kill;
     }
     
     public void start(int seconds, BossBar bb, Game game, Runnable onComplete, Consumer<Integer> onTick) {
@@ -49,6 +53,14 @@ public class Timer {
 
             @Override
             public void run() {
+                if(getKill()){
+                    timeLeft=1;
+                    cancel();
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.hideBossBar(bossBar);
+                    }
+                    return;
+                }
                 if (timeLeft <= 0) {
                     cancel();
                     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -65,7 +77,9 @@ public class Timer {
                 // );
 
                 bossBar.progress(progress);
-
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.showBossBar(bossBar);
+                    }
                 onTick.accept(timeLeft);
                 timeLeft--;
             }

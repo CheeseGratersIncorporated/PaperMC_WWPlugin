@@ -1,5 +1,6 @@
 package jenny.werewolf.papermc.plugin;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,23 +9,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameRules;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-
 import net.kyori.adventure.title.Title;
-
-import java.time.Duration;
 
 public class Game {
     private ArrayList<WWPlayer> players;
     public Set<WWPlayer> dead=new HashSet<>();
+    public Set<WWPlayer> announceDead=new HashSet<>();
     public Set<WWPlayer> wolves=new HashSet<>();
     public Set<WWPlayer> knockedOut=new HashSet<>();
     Map<String, WWPlayer> playerMap = new HashMap<>();
@@ -33,6 +29,7 @@ public class Game {
     private int WWPlayerCount, aliveCount;
     private boolean isGameActive = false;
     private ExamplePlugin plugin;
+    public ArrayList<Component> gameEndFlags=new ArrayList<>();
 
 
     public Game(ExamplePlugin plugin) {
@@ -40,6 +37,7 @@ public class Game {
         this.players = new ArrayList<>();
         this.roles = new HashMap<>();
         this.handler = new Handler(this,plugin);
+        this.isGameActive= false;
     }
     public void startGame() {
         isGameActive = true;
@@ -130,23 +128,84 @@ public class Game {
             if(wwp==null){
                 
                 addWWPlayer(p.getName());
-                getWWPlayer(p.getName()).setRole(new Townie());
-                
-                    plugin.inventoryManager.prepareInventory(p);
+                getWWPlayer(p.getName()).setRole(new Spectator());
+                p.getInventory().clear();
+                    // plugin.inventoryManager.prepareInventory(p);
                 p.kill();
 
             }
         }
+        announceDead=new HashSet<>();
     }
 
+    public void endGame(){
+        // return;
+        //hi
+        isGameActive = false;
+        int i=0;
+        for(Component c : gameEndFlags){
+            Bukkit.getServer().broadcast(c);
+            Bukkit.getScheduler().runTaskLater(plugin,() -> {
+                for(Player p : Bukkit.getServer().getOnlinePlayers()){
+                                    Component title = c;
+                    Component subtitle = Component.text(
+                            "",
+                            NamedTextColor.GRAY
+                        );
+                    
+                    
 
+                    Title.Times times = Title.Times.times(
+                            Duration.ofMillis(500),  // Fade in
+                            Duration.ofSeconds(3),  // Stay
+                            Duration.ofMillis(500)  // Fade out
+                    );
+
+                    p.showTitle(Title.title(title, subtitle, times));
+                }
+            },4*20*i);
+            i++;
+        }
+        for(WWPlayer wwp : players){
+            Bukkit.getServer().broadcast(Component.text(wwp.getName(),NamedTextColor.WHITE).append(Component.text(" was a ",NamedTextColor.YELLOW)).append(wwp.getRole().title));
+        }
+        gameEndFlags=new ArrayList<>();
+        if(plugin.sceneManager.getLocation("default_spawnpoint")!=null)
+        for(Player p: Bukkit.getServer().getOnlinePlayers()){
+
+            p.teleport(plugin.sceneManager.getLocation("default_spawnpoint"));
+        }
+        plugin.timerInstance.stop();
+        plugin.timerInstance.kill=true;
+        Bukkit.getScheduler().runTask(plugin,() -> {
+            
+        plugin.reset();
+        });
+        Bukkit.getScheduler().runTaskLater(plugin,() -> {
+        plugin.reset();
+        },5);
+        plugin.reset();
+        
+    }
     public void killWWPlayer(WWPlayer wwp) {
-        if(!wwp.isAlive()) return;
-        wwp.setAlive(false);
+       
         dead.add(wwp);
+        if(!(getPhase()==GamePhase.NIGHT||getPhase()==GamePhase.POST_NIGHT)){
+            plugin.fakeTabManager.removeFakePlayerForEveryone(wwp.getName());
+            plugin.fakeTabManager.addFakePlayerForEveryone(
+                wwp.getName(),
+            wwp.getName(),
+            Component.text(wwp.getName(),NamedTextColor.GRAY),
+            42
+            );
+        }
+        
         wwp.setPrivateChat(true);
         wwp.setPrivateChatPlayers(dead);
         wwp.setPrivateChatPrefix(Component.text("[DEAD]",NamedTextColor.GRAY));
+         if(!wwp.isAlive()) return;
+         
+        wwp.setAlive(false);
         aliveCount--;
     }
     public boolean canVote(){
@@ -160,6 +219,9 @@ public class Game {
     }
     public void setWWPlayerJudgment(WWPlayer wwp, int j){
         wwp.setJudgment(j);
+    }
+    public int getWWPlayerJudgment(WWPlayer wwp){
+        return wwp.getJudgment();
     }
     public Component setWWPlayerTarget(WWPlayer wwp, WWPlayer target) {
         // if(wwp.getTarget() == target) return Component.text("You are already targetting "+target.getName(), NamedTextColor.RED);
@@ -180,21 +242,41 @@ public class Game {
         return true;
     }
     public void addWWPlayer(WWPlayer wwp) {
-        if(isGameActive)killWWPlayer(wwp);
+        if(isGameActive){
+            wwp.setRole(new Spectator());
+            killWWPlayer(wwp);
+        }
         players.add(wwp);
         playerMap.put(wwp.getName(), wwp);
+        plugin.fakeTabManager.addFakePlayerForEveryone(
+            wwp.getName(),
+        wwp.getName(),
+        Component.text(wwp.getName()),
+        42
+        );
+        
     }
     public void addWWPlayer(String p) {
         WWPlayer wwp = new WWPlayer(p);
-        if(isGameActive)killWWPlayer(wwp);
+        if(isGameActive){
+            wwp.setRole(new Spectator());
+            killWWPlayer(wwp);
+        }
         players.add(wwp);
         playerMap.put(p, wwp);
+        plugin.fakeTabManager.addFakePlayerForEveryone(
+            wwp.getName(),
+        wwp.getName(),
+        Component.text(wwp.getName()),
+        42
+        );
     }
     public void removeWWPlayer(WWPlayer wwp) {
         if(!players.contains(wwp)) return;
         if(isGameActive)killWWPlayer(wwp);
         WWPlayerCount--;
-        
+        plugin.fakeTabManager.removeFakePlayerForEveryone(wwp.getName());
+        if(wwp.getHouse()!=null)
         wwp.getHouse().owner=null;
         players.remove(wwp);
         playerMap.remove(wwp.getName());
@@ -207,6 +289,8 @@ public class Game {
         WWPlayerCount--;
         WWPlayer p = playerMap.get(wwp);
         
+        plugin.fakeTabManager.removeFakePlayerForEveryone(p.getName());
+        if(p.getHouse()!=null)
         p.getHouse().owner=null;
         players.remove(p);
         playerMap.remove(wwp);
@@ -236,6 +320,12 @@ public class Game {
     }
     public void flushEvents() {
         handler.flushEvents();
+    }
+    public GamePhase getPhase(){
+        return handler.currentPhase;
+    }
+    public WWPlayer getSentenced(){
+        return handler.sentenced;
     }
     public boolean canWolvesPVP(){
         return handler.currentPhase==GamePhase.POST_NIGHT;

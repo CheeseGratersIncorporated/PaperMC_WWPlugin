@@ -4,6 +4,7 @@ import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.Perm;
 
 import org.bukkit.entity.Player;
 
@@ -18,7 +19,13 @@ import io.papermc.paper.command.brigadier.Commands;
 public class RolesCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("roles")
-            
+            .requires(source -> {
+                if( source.getSender() instanceof Player p){
+                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    return plugin.permMap.get(p.getName())==Perm.HOST;
+                }
+                return false;
+        })
         
         
         
@@ -39,6 +46,13 @@ public class RolesCommand {
         //SET COMMAND
         .then(
                 Commands.literal("set")
+                .requires(source -> {
+                if( source.getSender() instanceof Player p){
+                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    return plugin.permMap.get(p.getName())==Perm.HOST&&!plugin.gameInstance.isActive();
+                }
+                return false;
+        })
                     .then(Commands.argument("role", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             for (String role : Role.names()) {

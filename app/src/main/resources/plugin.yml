@@ -5,6 +5,7 @@ description: Werewolf Plugin of DOOM
 author: Gega
 website: https://papermc.io
 api-version: '26.2'
-
+depend:
+  - packetevents
 softdepend:
   - voicechat

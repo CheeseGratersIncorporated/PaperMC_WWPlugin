@@ -5,6 +5,7 @@ import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.Perm;
 
 import org.bukkit.entity.Player;
 
@@ -16,6 +17,15 @@ import io.papermc.paper.command.brigadier.Commands;
 public class RoleCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("role")
+        .requires(source -> {
+                if( source.getSender() instanceof Player p){
+                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    
+                return plugin.gameInstance.isActive();
+                }
+                return plugin.gameInstance.isActive();
+        })
+            
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
                     if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
@@ -28,7 +38,7 @@ public class RoleCommand {
                     }
                     // Additional role command logic here
                     String roleName = plugin.gameInstance.getWWPlayerRole(player.getName()).getName();
-                    player.sendMessage(Component.text("Your role is: " + roleName, NamedTextColor.GREEN));
+                    player.sendMessage(Component.text("Your role is: ", NamedTextColor.YELLOW).append(plugin.gameInstance.getWWPlayerRole(player.getName()).title));
                 }
                 return Command.SINGLE_SUCCESS;
             });

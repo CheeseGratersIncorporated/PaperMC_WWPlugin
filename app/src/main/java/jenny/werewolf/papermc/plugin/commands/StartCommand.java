@@ -15,6 +15,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import jenny.werewolf.papermc.plugin.ExamplePlugin;
 import jenny.werewolf.papermc.plugin.WWPlayer;
 import jenny.werewolf.papermc.plugin.House;
+import jenny.werewolf.papermc.plugin.Perm;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title.Times;
@@ -27,8 +28,19 @@ import org.bukkit.block.Biome;
 public class StartCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("start")
+        .requires(source -> {
+                if( source.getSender() instanceof Player p){
+                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    else return (plugin.permMap.get(p.getName())==Perm.HOST)&&(!plugin.gameInstance.isActive());
+                }
+                return false;
+        })
             .executes(ctx -> {
-                    
+                plugin.housingManager.closeAllDoors();
+                plugin.sceneManager.load();
+                plugin.housingManager.clearViewers();
+                    Bukkit.getServer().broadcast(Component.text("loaded scenes" , NamedTextColor.GREEN));
+                    plugin.housingManager.forceClaim(plugin.gameInstance.getWWPlayerList());
              plugin.setBiomeVolume(plugin.sceneManager.getLocation("town_corner1"),plugin.sceneManager.getLocation("town_corner2"),plugin.fogBiome);
                 for(House h: plugin.housingManager.getHouses()){
                     if(h.lectern!=null){
@@ -57,6 +69,15 @@ public class StartCommand {
                                 for (Player viewer : Bukkit.getOnlinePlayers()) {
                         viewer.showPlayer(plugin, p);
                     
+                                    }
+                                    if(plugin.gameInstance.getWWPlayer(p.getName())==null){
+                                        p.setRespawnLocation(plugin.sceneManager.getLocation("default_spawnpoint"),true);
+                                        p.setInvisible(true);
+                                        p.setCollidable(true);
+                                    }else{
+                                        if(plugin.gameInstance.getWWPlayer(p.getName()).getHouse()!=null){
+                                            p.setRespawnLocation(plugin.gameInstance.getWWPlayer(p.getName()).getHouse().location,true);
+                                        }
                                     }
                                 p.playSound(
                                         p.getLocation(),

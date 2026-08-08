@@ -18,6 +18,8 @@ public abstract class Role {
         register("doctor", Doctor::new);
         register("werewolf", Werewolf::new);
         register("sheriff", Sheriff::new);
+        register("milkman", Milkman::new);
+        register("fool", Jester::new);
     }
 
     public static void register(String name, Supplier<Role> factory) {
@@ -33,8 +35,10 @@ public abstract class Role {
     }
     public boolean werewolf=false;
     public boolean townie=true;
+    public boolean jester=false;
+    public boolean spectator=false;
     public int def=0,atk=0;
-    public boolean doctored=false, attacked=false;
+    public boolean doctored=false, attacked=false, absent=false;
     public WWPlayer player;
     public Component title=Component.text("filler text haha"),subtitle=Component.text("im bad");
     public abstract String getName();
@@ -47,13 +51,15 @@ public abstract class Role {
     }
 }
 
+
+
 class Townie extends Role {
     public Townie(){
         this.title=Component.text("TOWNIE",NamedTextColor.GREEN);
         this.subtitle=Component.text("Vote out the werewolves and survive.",NamedTextColor.GRAY);
     }
     public String getName() {
-        return "townie";
+        return "TOWNIE. You do nothing L. Vote out the werewolves ig.";
     }
     @Override
     public void dayAbility(Handler handler) {
@@ -75,33 +81,77 @@ class Townie extends Role {
         return Component.text("You have no ability", NamedTextColor.RED);
     }
 }
-class NullRole extends Role{
-    public String getName() {
-        return "null";
+class Spectator extends Role {
+    public Spectator(){
+        this.spectator=true;
+        this.title=Component.text("SPECTATOR",NamedTextColor.GRAY);
+        this.subtitle=Component.text("Watch the game unfold.",NamedTextColor.GRAY);
     }
-
+    public String getName() {
+        return "spectator";
+    }
     @Override
     public void dayAbility(Handler handler) {
+        // Townie's ability logic here
     }
 
     @Override
     public void nightAbility(Handler handler) {
+        // Townie's night ability logic here
     }
 
     @Override
     public void immediateAbility() {
+        // Townie's immediate ability logic here
+    }
+
+    public boolean checkTarget(WWPlayer t){return false;}
+    public Component getNewTargetResponse(WWPlayer t){
+        return Component.text("You have no ability", NamedTextColor.RED);
     }
 }
+class Jester extends Role {
+    public Jester(){
+        this.townie=false;
+        this.jester=true;
+        this.title=Component.text("TOWN FOOL",NamedTextColor.LIGHT_PURPLE);
+        this.subtitle=Component.text("Get yourself executed by the town",NamedTextColor.GRAY);
+    }
+    public String getName() {
+        return "TOWN FOOL. Get yourself executed in front of the town. You have no abilities.";
+    }
+    @Override
+    public void dayAbility(Handler handler) {
+        // Townie's ability logic here
+    }
+
+    @Override
+    public void nightAbility(Handler handler) {
+        // Townie's night ability logic here
+    }
+
+    @Override
+    public void immediateAbility() {
+        // Townie's immediate ability logic here
+    }
+
+    public boolean checkTarget(WWPlayer t){return false;}
+    public Component getNewTargetResponse(WWPlayer t){
+        return Component.text("You have no ability", NamedTextColor.RED);
+    }
+}
+
 class Werewolf extends Role {
     public Werewolf(){
         this.werewolf=true;
+        this.townie=false;
         this.atk=1;
         this.title=Component.text("WEREWOLF",NamedTextColor.RED);
         this.subtitle=Component.text("Murder >:3",NamedTextColor.GRAY);
     
     }
     public String getName() {
-        return "werewolf";
+        return "WEREWOLF. At night you're teleported to the wolf den with your fellow wolves. Use /ww target [player] to choose a player to kill. The votes of your fellow wolves are counted up and the person with the most votes is killed. Tie votes are decided randomly.";
     }
     @Override
     public void dayAbility(Handler handler) {
@@ -110,8 +160,12 @@ class Werewolf extends Role {
 
     @Override
     public void nightAbility(Handler handler) {
+         handler.pushEvent(WWEvent.of(RolePriority.ABSENCE,
+            ()->{
+                absent=true;
+            }));
         if(!player.isAlive()||player.getTarget()==null)return;
-        handler.pushEvent(WWEvent.of(100,
+        handler.pushEvent(WWEvent.of(RolePriority.WEREWOLVES_VOTE,
             ()->{
                 if(player.getTarget()!=null){
                     
@@ -149,7 +203,7 @@ class Sheriff extends Role {
         this.subtitle=Component.text("Investigate others for signs of tomfoolery",NamedTextColor.GRAY);
     }
     public String getName() {
-        return "sheriff";
+        return "SHERIFF. Use /ww target [player] to investigate a player. You will be told whether or not they are a werewolf.";
     }
     @Override
     public void dayAbility(Handler handler) {
@@ -159,7 +213,11 @@ class Sheriff extends Role {
     @Override
     public void nightAbility(Handler handler) {
         if(!player.isAlive()||player.getTarget()==null)return;
-        handler.pushEvent(WWEvent.of(70,
+         handler.pushEvent(WWEvent.of(RolePriority.ABSENCE,
+            ()->{
+                absent=true;
+            }));
+        handler.pushEvent(WWEvent.of(RolePriority.SHERIFF_INVESTIGATE,
             ()->{
                 if(player.getTarget()!=null){
             for(Player p : Bukkit.getServer().getOnlinePlayers()){
@@ -196,6 +254,7 @@ class Sheriff extends Role {
 }
 
 class Doctor extends Role {
+    
     private int selfHeals=1;
     public Doctor(){
         this.selfHeals=1;
@@ -204,7 +263,7 @@ class Doctor extends Role {
     
     }
     public String getName() {
-        return "doctor";
+        return "DOCTOR. Use /ww target [player] to choose a player to heal. If that player is attacked by the werewolves, they will survive the night. You have one self heal per game.";
     }
 
     @Override
@@ -218,14 +277,20 @@ class Doctor extends Role {
         if(player.getTarget().getName().equals(player.getName())){
             if(selfHeals<=0)return;
             selfHeals--;
+        }else{
+             handler.pushEvent(WWEvent.of(RolePriority.ABSENCE,
+            ()->{
+                absent=true;
+            }));
         }
-        handler.pushEvent(WWEvent.of(100,
+        
+        handler.pushEvent(WWEvent.of(RolePriority.DOCTOR_DOCTORED,
             ()->{
                 if(player.getTarget()!=null){
             player.getTarget().getRole().doctored=true;
         }
         }));
-        handler.pushEvent(WWEvent.of(0,
+        handler.pushEvent(WWEvent.of(RolePriority.DOCTOR_UNDOCTORED,
             ()->{
                 if(player.getTarget()!=null){
             player.getTarget().getRole().doctored=false;
@@ -260,5 +325,62 @@ class Doctor extends Role {
             return Component.text("A sudden sense of moral duty surges through your body. Seems you can't keep being selfish and healing yourself.", NamedTextColor.RED);
         }if(!t.isAlive())return Component.text("Trying to treat a corpse may not be the brightest of ideas.", NamedTextColor.RED); 
         return Component.text("You decided to heal "+ t.getName(), NamedTextColor.GREEN);
+    }
+}
+
+class Milkman extends Role {
+    public Milkman(){
+        
+        this.title=Component.text("MILKMAN",NamedTextColor.GREEN);
+        this.subtitle=Component.text("Deliver morning milk and peep through windows",NamedTextColor.GRAY);
+    }
+    public String getName() {
+        return "MILKMAN. Use /ww target [player] to choose a player to deliver milk to. You will be told whether or not they were home last night(Werewolves are always absent, Acting Town roles are absent if they targeted someone that wasn't themselves that night).";
+    }
+    @Override
+    public void dayAbility(Handler handler) {
+        // Milkman's ability logic here
+    }
+
+    @Override
+    public void nightAbility(Handler handler) {
+        if(!player.isAlive()||player.getTarget()==null)return;
+         handler.pushEvent(WWEvent.of(RolePriority.ABSENCE,
+            ()->{
+                absent=true;
+            }));
+        handler.pushEvent(WWEvent.of(RolePriority.MILKMAN_DELIVER,
+            ()->{
+                if(player.getTarget()!=null){
+            for(Player p : Bukkit.getServer().getOnlinePlayers()){
+            if(p.getName().equals(player.getName())){
+                if(player.getTarget().getRole().absent)
+                    p.sendMessage(Component.text("Your target was absent from their home", NamedTextColor.AQUA));
+                else
+                    p.sendMessage(Component.text("Your target was not absent from their home", NamedTextColor.AQUA));
+
+            }
+        }}
+        }));
+        
+    }
+
+    @Override
+    public void immediateAbility() {
+        // Sheriff's immediate ability logic here
+    }
+    public boolean checkTarget(WWPlayer t){
+        if(!player.isAlive())return false;
+        if(t==null)return true;
+        if(!t.isAlive())return false;
+        if(t.getName().equals(player.getName()))return false;
+        return true;
+    }
+    public Component getNewTargetResponse(WWPlayer t){
+        if(!player.isAlive())return Component.text("你死了", NamedTextColor.RED);
+        if(t==null)return Component.text("You decided not to deliver anything", NamedTextColor.GREEN);
+        if(t.getName().equals(player.getName()))return Component.text("You have all the milk you need!", NamedTextColor.RED);
+        if(!t.isAlive())return Component.text("You feel that "+t.getName()+" might not need milk for a very long time", NamedTextColor.RED); 
+        return Component.text("You decided to deliver milk to "+ t.getName(), NamedTextColor.GREEN);
     }
 }

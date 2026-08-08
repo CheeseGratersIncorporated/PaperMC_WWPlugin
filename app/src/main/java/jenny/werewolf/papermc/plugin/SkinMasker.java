@@ -13,204 +13,115 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class SkinMasker {
+import com.destroystokyo.paper.profile.PlayerProfile;
+import org.bukkit.entity.Player;
 
-    /*
-     * Preset name -> Minecraft texture URL
-     *
-     * Preset names are stored in lowercase, so lookups are
-     * case-insensitive.
-     */
-    private final Map<String, String> presetSkins = new HashMap<>();
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
-    /*
-     * Player UUID -> profile before the first mask was applied.
-     *
-     * putIfAbsent is important: applying multiple masks will not
-     * overwrite the player's true original skin.
-     */
-    private final Map<UUID, PlayerProfile> originalSkins = new HashMap<>();
+public final class SkinMasker {
 
-    public SkinMasker() {
-        registerPreset(
-                "bluey",
-                "https://textures.minecraft.net/texture/"
-                        + "8dc4e530cddb3d02f417b38e6378813b7ccc2da32feaee9612589e6fe8d605c6"
-        );
+    private final Map<String, SignedSkin> presetSkins =
+            new HashMap<>();
 
-        // Add more presets here:
-        /*
-        registerPreset(
-                "werewolf",
-                "https://textures.minecraft.net/texture/..."
-        );
+    private final Map<UUID, PlayerProfile> originalSkins =
+            new HashMap<>();
 
-        registerPreset(
-                "townie",
-                "https://textures.minecraft.net/texture/..."
-        );
-        */
-    }
-
-    /**
-     * Registers or replaces a preset skin.
-     */
     public void registerPreset(
-            String presetSkinName,
-            String textureUrl
+            String presetName,
+            String textureValue,
+            String textureSignature
     ) {
-        Objects.requireNonNull(
-                presetSkinName,
-                "presetSkinName"
+        Objects.requireNonNull(presetName, "presetName");
+
+        presetSkins.put(
+                normalize(presetName),
+                new SignedSkin(
+                        textureValue,
+                        textureSignature
+                )
         );
-
-        Objects.requireNonNull(
-                textureUrl,
-                "textureUrl"
-        );
-
-        String normalizedName = normalizePresetName(presetSkinName);
-
-        if (normalizedName.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Preset skin name cannot be blank"
-            );
-        }
-
-        // Validate the URL now instead of waiting until setSkin().
-        parseTextureUrl(textureUrl);
-
-        presetSkins.put(normalizedName, textureUrl);
     }
 
-    /**
-     * Applies a preset skin to a player.
-     *
-     * The player's original profile is saved only the first time
-     * they are masked.
-     */
     public void setSkin(
             Player player,
-            String presetSkinName
+            String presetName
     ) {
         Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(
-                presetSkinName,
-                "presetSkinName"
-        );
+        Objects.requireNonNull(presetName, "presetName");
 
-        String normalizedName =
-                normalizePresetName(presetSkinName);
+        SignedSkin skin =
+                presetSkins.get(normalize(presetName));
 
-        String textureUrl =
-                presetSkins.get(normalizedName);
-
-        if (textureUrl == null) {
+        if (skin == null) {
             throw new IllegalArgumentException(
-                    "Unknown skin preset: "
-                            + presetSkinName
+                    "Unknown skin preset: " + presetName
             );
         }
 
         /*
-         * getPlayerProfile() returns a copy, so this stores an
-         * independent copy of the player's original profile.
-         *
-         * putIfAbsent means:
-         * original -> werewolf -> townie -> restore
-         *
-         * restores the true original rather than the werewolf skin.
+         * Save the real original profile only once.
          */
         originalSkins.putIfAbsent(
                 player.getUniqueId(),
-                player.getPlayerProfile()
+                player.getPlayerProfile().clone()
         );
 
         PlayerProfile maskedProfile =
                 player.getPlayerProfile();
 
-        PlayerTextures textures =
-                maskedProfile.getTextures();
-
-        textures.setSkin(
-                parseTextureUrl(textureUrl),
-                PlayerTextures.SkinModel.CLASSIC
+        /*
+         * Replace the complete texture property rather than
+         * calling PlayerTextures#setSkin(URL).
+         */
+        maskedProfile.removeProperty("textures");
+        maskedProfile.setProperty(
+                skin.toPaperProperty()
         );
 
-        maskedProfile.setTextures(textures);
         player.setPlayerProfile(maskedProfile);
     }
 
-    /**
-     * Restores the player's profile from before the first mask.
-     *
-     * @return true if an original profile existed and was restored
-     */
     public boolean restoreSkin(Player player) {
         Objects.requireNonNull(player, "player");
 
-        PlayerProfile originalProfile =
-                originalSkins.remove(player.getUniqueId());
+        PlayerProfile original =
+                originalSkins.remove(
+                        player.getUniqueId()
+                );
 
-        if (originalProfile == null) {
+        if (original == null) {
             return false;
         }
 
-        player.setPlayerProfile(originalProfile);
+        player.setPlayerProfile(original);
         return true;
     }
 
-    public boolean isMasked(Player player) {
-        Objects.requireNonNull(player, "player");
+    public SignedSkin getPreset(String presetName) {
+        if (presetName == null) {
+            return null;
+        }
 
+        return presetSkins.get(
+                normalize(presetName)
+        );
+    }
+
+    public boolean hasPreset(String presetName) {
+        return getPreset(presetName) != null;
+    }
+
+    public boolean isMasked(Player player) {
         return originalSkins.containsKey(
                 player.getUniqueId()
         );
     }
 
-    public boolean hasPreset(String presetSkinName) {
-        if (presetSkinName == null) {
-            return false;
-        }
-
-        return presetSkins.containsKey(
-                normalizePresetName(presetSkinName)
-        );
-    }
-
-    /**
-     * Returns a read-only view of the registered presets.
-     */
-    public Map<String, String> getPresetSkins() {
-        return Collections.unmodifiableMap(presetSkins);
-    }
-
-    private static String normalizePresetName(String name) {
+    private static String normalize(String name) {
         return name.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private static URL parseTextureUrl(String textureUrl) {
-        try {
-            URL url = URI.create(textureUrl).toURL();
-
-            if (!url.getHost().equalsIgnoreCase(
-                    "textures.minecraft.net"
-            )) {
-                throw new IllegalArgumentException(
-                        "Skin URL must use textures.minecraft.net: "
-                                + textureUrl
-                );
-            }
-
-            return url;
-        } catch (
-                IllegalArgumentException
-                | MalformedURLException exception
-        ) {
-            throw new IllegalArgumentException(
-                    "Invalid skin texture URL: " + textureUrl,
-                    exception
-            );
-        }
     }
 }

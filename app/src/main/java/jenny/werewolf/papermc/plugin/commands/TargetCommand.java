@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.Perm;
 import jenny.werewolf.papermc.plugin.WWPlayer;
 import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
@@ -17,6 +18,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class TargetCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("target")
+        .requires(source -> {
+                if( source.getSender() instanceof Player p){
+                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    return plugin.gameInstance.isActive();
+                }
+                return false;
+        })
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
                     if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {

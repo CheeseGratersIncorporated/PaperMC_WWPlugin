@@ -24,6 +24,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.enchantments.Enchantment;     
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
@@ -114,6 +116,74 @@ public final class ControlledInventoryManager implements Listener {
         inventory.setHeldItemSlot(bookSlot);
     }
 
+    public void toggleJudgment(Player player){
+        if(!plugin.gameInstance.getWWPlayerNames().contains(player.getName())||!plugin.gameInstance.isActive())return;
+        if(!plugin.gameInstance.getWWPlayer(player.getName()).isAlive())return;
+        if(plugin.gameInstance.getWWPlayer(player.getName())==plugin.gameInstance.getSentenced())return;
+        
+        PlayerInventory inventory = player.getInventory();
+
+        if(!plugin.gameInstance.canJudge()){
+            inventory.setItem(7, new ItemStack(Material.AIR));
+            inventory.setItem(8, new ItemStack(Material.AIR));
+            return;
+        }
+        ItemStack innocent = new ItemStack(Material.LIME_CONCRETE);
+        ItemMeta meta = innocent.getItemMeta();
+
+        meta.displayName(Component.text("INNOCENT", NamedTextColor.GREEN));
+
+        innocent.setItemMeta(meta);
+
+
+        ItemStack guilty = new ItemStack(Material.RED_CONCRETE);
+        ItemMeta meta2 = guilty.getItemMeta();
+
+        meta2.displayName(Component.text("GUILTY", NamedTextColor.RED));
+
+        guilty.setItemMeta(meta2);
+
+        inventory.setItem(7, innocent);
+        inventory.setItem(8, guilty);
+        
+        inventory.setHeldItemSlot(4);
+    }
+    public void toggleJudgmentEnchant(Player player, int slot){
+        if(!plugin.gameInstance.getWWPlayerNames().contains(player.getName())||!plugin.gameInstance.isActive())return;
+        if(!plugin.gameInstance.getWWPlayer(player.getName()).isAlive())return;
+
+        
+        PlayerInventory inventory = player.getInventory();
+
+        if(!plugin.gameInstance.canJudge()){
+            inventory.setItem(7, new ItemStack(Material.AIR));
+            inventory.setItem(8, new ItemStack(Material.AIR));
+            return;
+        }
+        ItemStack innocent = new ItemStack(Material.LIME_CONCRETE);
+        ItemMeta meta = innocent.getItemMeta();
+
+        meta.displayName(Component.text("INNOCENT", NamedTextColor.GREEN));
+        if(slot==7){
+            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+            innocent.setItemMeta(meta);
+
+
+        ItemStack guilty = new ItemStack(Material.RED_CONCRETE);
+        ItemMeta meta2 = guilty.getItemMeta();
+
+        meta2.displayName(Component.text("GUILTY", NamedTextColor.RED));
+        if(slot==8){
+            meta2.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta2.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+        guilty.setItemMeta(meta2);
+
+        inventory.setItem(7, innocent);
+        inventory.setItem(8, guilty);
+    }
     /**
      * Returns a copy of the current pages in the player's book.
      */
@@ -155,6 +225,9 @@ public final class ControlledInventoryManager implements Listener {
 
     if (!isControlledBook(original)
             || original.getType() != Material.WRITABLE_BOOK) {
+        return false;
+    }
+    if (lectern.getInventory().getItem(0) != null) {
         return false;
     }
 

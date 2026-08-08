@@ -33,7 +33,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 
 public class HousingManager {
-    public static boolean debug = true; 
+    public static boolean debug = false; 
     public Location open,close;
     public Player follow;
     public BlockDisplay interiorSetDisplay;
@@ -58,6 +58,22 @@ public class HousingManager {
         }else {
             viewers.remove(player.getName());
         }
+        refreshVisibility();
+    }
+    public void addViewer(Player player) {
+        if (!viewers.contains(player.getName())) {
+            viewers.add(player.getName());
+        }
+        refreshVisibility();
+    }
+    public void removeViewer(Player player) {
+        if (viewers.contains(player.getName())) {
+            viewers.remove(player.getName());
+        }
+        refreshVisibility();
+    }
+    public void clearViewers() {
+        viewers.clear();
         refreshVisibility();
     }
 
@@ -375,6 +391,13 @@ public class HousingManager {
         }
         return true;
     }
+    public void closeAllDoors(){
+        for(House h: houses){
+            for(Door d:h.doors){
+                d.close();
+            }
+        }
+    }
     public boolean deleteInterior(Location l, String house){
         House h=houseMap.get(house);
         if(h==null){
@@ -433,24 +456,39 @@ public class HousingManager {
     }
     public void forceClaim(ArrayList<WWPlayer> wwps){
         Collections.shuffle(wwps);
+        Collections.shuffle(houses);
         int i=0;
         for(WWPlayer wwp:wwps){
             if(wwp.getHouse()!=null)continue;
+            
+            Bukkit.getServer().broadcast(Component.text("homeless -> "+wwp.getName()));
             while(i<houses.size()){
                 
-                if((houses.get(i).owner==null)){
                     House h=houses.get(i);
                         if((h.owner==null)){
+                        if(ownerMap.containsKey(wwp.getName())){
+                            ownerMap.get(wwp.getName()).owner=null;
+                        }
+                
+                
                             h.owner=wwp;
                             
+                h.owner.setHouse(h);
                             wwp.setHouse(h);
                             ownerMap.put(wwp.getName(),h);
                             
                             refreshVisibility();
-                            i++;
+                            for(Player p : Bukkit.getServer().getOnlinePlayers()){
+                    if(p.getName().equals(wwp.getName())){
+                        p.setRespawnLocation(h.location,true);
+                updateHover(p);
+                p.sendMessage(Component.text("You have claimed " + plugin.housingManager.getPlayerClaim(p), NamedTextColor.GREEN));
+                
+                    }
+                }
                             break;
                         }
-                    }
+                    
                     i++;
                 }
             }

@@ -16,10 +16,11 @@ public class LoadCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("load")
             .executes(ctx -> {
-                if (ctx.getSource().getSender() instanceof Player player) {
                     plugin.housingDataManager.load();
                     
                     plugin.housingManager.load(plugin.housingDataManager.houses);
+                    
+                if (ctx.getSource().getSender() instanceof Player player) {
                     player.sendMessage(Component.text("Loaded", NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;

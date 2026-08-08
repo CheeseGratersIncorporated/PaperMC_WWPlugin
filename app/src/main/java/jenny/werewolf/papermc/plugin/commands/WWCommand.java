@@ -11,6 +11,8 @@ import jenny.werewolf.papermc.plugin.commands.scene.SceneCommand;
 public class WWCommand {
     public static LiteralCommandNode<CommandSourceStack> create(ExamplePlugin plugin) {
         return Commands.literal("ww")
+        
+            .then(PermsCommand.create(plugin))
             .then(RolesCommand.create(plugin))
             .then(StartCommand.create(plugin))
             .then(JoinCommand.create(plugin))
@@ -20,7 +22,8 @@ public class WWCommand {
             .then(VoteCommand.create(plugin))
             .then(TargetCommand.create(plugin))
             .then(SceneCommand.create(plugin))
-            
+            .then(SpectateCommand.create(plugin))
+            .then(ClaimCommand.create(plugin))
             .then(ResetCommand.create(plugin))
             .build();
     }

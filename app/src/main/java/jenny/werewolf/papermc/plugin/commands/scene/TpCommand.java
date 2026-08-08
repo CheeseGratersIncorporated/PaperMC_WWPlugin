@@ -31,7 +31,7 @@ public class TpCommand {
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
                     if (plugin.sceneManager.getLocations().keySet().contains(name)) {
-                        
+                        player.setAllowFlight(true);
                         player.setFlying(true);
                         player.teleport(plugin.sceneManager.getLocation(name));
                     }
