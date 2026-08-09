@@ -30,6 +30,7 @@ public class Game {
     private boolean isGameActive = false;
     private ExamplePlugin plugin;
     public ArrayList<Component> gameEndFlags=new ArrayList<>();
+    public boolean blueyMode=false;
 
 
     public Game(ExamplePlugin plugin) {

@@ -24,6 +24,7 @@ public class WWCommand {
             .then(SceneCommand.create(plugin))
             .then(SpectateCommand.create(plugin))
             .then(ClaimCommand.create(plugin))
+            .then(BlueyCommand.create(plugin))
             .then(ResetCommand.create(plugin))
             .build();
     }

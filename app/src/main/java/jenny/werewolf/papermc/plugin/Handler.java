@@ -792,7 +792,10 @@ public class Handler{
                                             WWPlayer wwp = game.getWWPlayer(viewer.getName());
                                             if(wwp!=null&&wwp.getRole().werewolf&&wwp.isAlive()){
                                                 viewer.teleport(plugin.sceneManager.getLocation("wolf_den"));
-                                                plugin.skinMasker.setSkin(viewer, "bluey");
+                                                if(game.blueyMode)
+                                                    plugin.skinMasker.setSkin(viewer, "bluey");
+                                                else 
+                                                    plugin.skinMasker.setSkin(viewer, "werewolf");
                                             }
                                             if (!viewer.equals(p)) {
                                                 viewer.showPlayer(plugin, p);
