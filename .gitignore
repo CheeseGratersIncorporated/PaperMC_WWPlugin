@@ -3,3 +3,16 @@
 
 # Ignore Gradle build output directory
 build
+
+# Compiled Java
+**/bin/
+*.class
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
