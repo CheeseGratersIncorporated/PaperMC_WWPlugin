@@ -1,9 +1,8 @@
 name: WerewolfPluginOfDOOM
 version: 1.0.0
-main: jenny.werewolf.papermc.plugin.ExamplePlugin
+main: jenny.werewolf.papermc.plugin.WerewolfPlugin
 description: Werewolf Plugin of DOOM
 author: Gega
-website: https://papermc.io
 api-version: '26.2'
 depend:
   - packetevents

@@ -61,6 +61,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NavigableSet;
+import io.papermc.paper.event.block.BellRingEvent;
 
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
@@ -70,7 +71,7 @@ import org.bukkit.block.Biome;
 
 import jenny.werewolf.papermc.plugin.commands.WWCommand;
 
-public class ExamplePlugin extends JavaPlugin implements Listener {
+public class WerewolfPlugin extends JavaPlugin implements Listener {
     public WerewolfVoiceChat voiceChat;
   public SkinMasker skinMasker;
   public Game gameInstance = new Game(this);
@@ -86,6 +87,8 @@ public class ExamplePlugin extends JavaPlugin implements Listener {
   World world = getServer().getWorld("world");
   public Biome fogBiome;
   public HashMap<String, Perm> permMap = new HashMap<>();
+  
+    public boolean blueyMode=false;
   //public ArrayList<RotatingGhostBeam> beams = new ArrayList<RotatingGhostBeam>();
 
 
@@ -217,8 +220,12 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
         
         if(gameInstance.getWWPlayerNames().contains(event.getPlayer().getName())){
          
-          if(gameInstance.playersFrozen())event.setCancelled(true);
+          if(gameInstance.playersFrozen()){
+            if(event.getPlayer().getName().equals(gameInstance.getSentenced().getName())&&gameInstance.getSentenced().killed())return;
+            event.setCancelled(true);
+          }
             
+
 
         }
         if(housingManager.follow!=null){
@@ -286,7 +293,7 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
   public void onPlayerJoin(PlayerJoinEvent event) {
     event.getPlayer().sendMessage(Component.text("Hello, " + event.getPlayer().getName() + "!"));
     Bukkit.getScheduler().runTaskLater(this, housingManager::refreshVisibility, 5);
-    Bukkit.getScheduler().runTask(this, ExamplePlugin::shuffleTabList);
+    Bukkit.getScheduler().runTask(this, WerewolfPlugin::shuffleTabList);
     event.getPlayer().updateCommands();
     if(!gameInstance.isActive()){
       event.getPlayer().getWorld().setGameRule(GameRules.PVP, false);
@@ -303,6 +310,8 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
           viewer.unlistPlayer(p);
       }
     }
+    
+    skinMasker.restoreSkin(event.getPlayer());
     Bukkit.getScheduler().runTaskLater(
             this,
             () -> {
@@ -316,7 +325,7 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
             5L
     );
     if(gameInstance.isActive()){
-      
+      event.joinMessage(null);
     WWPlayer p = gameInstance.getWWPlayer(event.getPlayer().getName());
       if(p!=null){
               if(p.getHouse()!=null){
@@ -376,7 +385,15 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
                             }
           }else if(gameInstance.getPhase()==GamePhase.NIGHT||gameInstance.getPhase()==GamePhase.POST_NIGHT){
             nameTagManager.hideNameTag(event.getPlayer());
-            if(p.getRole().werewolf&&sceneManager.getLocation("wolf_den")!=null)event.getPlayer().teleport(sceneManager.getLocation("wolf_den"));
+            if(p.getRole().werewolf&&sceneManager.getLocation("wolf_den")!=null){
+              
+              event.getPlayer().teleport(sceneManager.getLocation("wolf_den"));
+                              if(blueyMode)
+                                  skinMasker.setSkin(event.getPlayer(), "bluey");
+                              else 
+                                  skinMasker.setSkin(event.getPlayer(), "werewolf");
+              
+            }
             else if(p.getHouse()!=null)event.getPlayer().teleport(p.getHouse().location);
           }
         }
@@ -394,9 +411,15 @@ Bukkit.getScheduler().runTaskLater(this, ()->{
   }
   @EventHandler
   public void onPlayerQuit(PlayerQuitEvent event) {
+    if(!gameInstance.isActive()){
+      
     Bukkit.getServer().broadcast(Component.text("We didn't like " + event.getPlayer().getName() + " anyways"));
-
-    Bukkit.getScheduler().runTask(this, ExamplePlugin::shuffleTabList);
+    
+    }else{
+      event.quitMessage(null);
+    }
+    
+    Bukkit.getScheduler().runTask(this, WerewolfPlugin::shuffleTabList);
     
   }
   @EventHandler(
@@ -522,6 +545,10 @@ if(!gameInstance.isActive())return;
         // Optional
         // event.getPlayer().sendMessage("You can't sleep here.");
     }
+    @EventHandler
+public void onBellRing(BellRingEvent event) {
+    event.setCancelled(true);
+}
     @EventHandler
     public void onSpawnChange(PlayerSpawnChangeEvent event) {
         if (event.getCause() == PlayerSpawnChangeEvent.Cause.BED) {

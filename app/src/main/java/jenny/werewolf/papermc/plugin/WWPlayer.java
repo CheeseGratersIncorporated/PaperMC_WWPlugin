@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.Set;
+import java.util.ArrayList;
 
 public class WWPlayer {
     
@@ -23,6 +24,7 @@ public class WWPlayer {
     private Set<WWPlayer> privateChatPlayers; 
     private boolean privateChat=false;
     private Component privateChatPrefix=Component.text("");
+    private ArrayList<Component> causesOfDeath=new ArrayList<>(); 
 
     public WWPlayer(String name, Role role) {
         this.name = name;
@@ -30,6 +32,13 @@ public class WWPlayer {
     }
     public WWPlayer(String name) {
         this.name = name;
+    }
+
+    public void appendCauseOfDeath(Component c){
+        causesOfDeath.add(c);
+    }
+    public ArrayList<Component> getCausesOfDeath(){
+        return causesOfDeath;
     }
 
     public String getName() {

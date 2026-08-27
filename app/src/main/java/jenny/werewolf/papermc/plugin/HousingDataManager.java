@@ -10,13 +10,13 @@ import java.util.List;
 
 public class HousingDataManager {
 
-    private final ExamplePlugin plugin;
+    private final WerewolfPlugin plugin;
     private final File file;
 
     private FileConfiguration data;
     public ArrayList<House> houses = new ArrayList<>();
 
-    public HousingDataManager(ExamplePlugin plugin) {
+    public HousingDataManager(WerewolfPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "housing.yml");
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class RotatingGhostBeam {
 
-    private final ExamplePlugin plugin;
+    private final WerewolfPlugin plugin;
     private final List<BlockDisplay> parts = new ArrayList<>();
 
     private BukkitTask task;
@@ -30,7 +30,7 @@ public class RotatingGhostBeam {
     private Set<Player> viewers = new HashSet<>();
     private Material beamMat=Material.LIGHT_BLUE_STAINED_GLASS;
 
-    public RotatingGhostBeam(ExamplePlugin plugin, Location base, Material m) {
+    public RotatingGhostBeam(WerewolfPlugin plugin, Location base, Material m) {
         this.plugin = plugin;
         beamMat=m;
         World world = Objects.requireNonNull(base.getWorld());

@@ -3,7 +3,7 @@ package jenny.werewolf.papermc.plugin.commands;
 import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 import jenny.werewolf.papermc.plugin.Perm;
 
 import org.bukkit.entity.Player;
@@ -18,7 +18,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
 public class BlueyCommand {
-    public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("bluey")
             .requires(source -> {
                 if( source.getSender() instanceof Player p){
@@ -32,9 +32,14 @@ public class BlueyCommand {
 
                         boolean value =
                             BoolArgumentType.getBool(ctx, "value");
-                            plugin.gameInstance.blueyMode=value;
+                            plugin.blueyMode=value;
                                         if (ctx.getSource().getSender() instanceof Player player) {
+                                            
+                            if(value)
                                             player.sendMessage(Component.text("bluey :)", NamedTextColor.BLUE));
+                                        
+                            else
+                                            player.sendMessage(Component.text("no bluey :(", NamedTextColor.BLUE));
                                         }
                                     
 

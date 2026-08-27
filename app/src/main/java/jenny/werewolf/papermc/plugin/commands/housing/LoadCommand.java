@@ -6,14 +6,14 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import com.mojang.brigadier.Command;
 
 public class LoadCommand {
-    public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("load")
             .executes(ctx -> {
                     plugin.housingDataManager.load();

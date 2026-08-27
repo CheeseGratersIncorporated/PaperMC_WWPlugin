@@ -37,7 +37,7 @@ public class Handler{
     GamePhase currentPhase;
     GamePhase nextPhase;
     Game game;
-    ExamplePlugin plugin;
+    WerewolfPlugin plugin;
     int dayCount=1;
     public int maxWolfVote=0;
     int voteTimeLeft=-1;
@@ -50,7 +50,7 @@ public class Handler{
     int aliveWerewolves=0;
                 int aliveNonwerewolves=0;
 
-    public Handler(Game game, ExamplePlugin plugin) {
+    public Handler(Game game, WerewolfPlugin plugin) {
         this.game = game;
         this.plugin = plugin;
     }
@@ -82,7 +82,24 @@ public class Handler{
                     if(wwp.getRole().spectator)continue;
                     announceDeadTimerIndex++;
                     Bukkit.getScheduler().runTaskLater(plugin,()->{
-                        Bukkit.getServer().broadcast(Component.text(wwp.getName()+" has died",NamedTextColor.RED));
+                        if(wwp.getCausesOfDeath().size()>0){
+                            Component c=Component.text(wwp.getName()+(wwp.getHouse()==null?"":"("+wwp.getHouse().name+")"),NamedTextColor.RED);
+                            for( int i=0;i<wwp.getCausesOfDeath().size();i++){
+                                if(i==0)c.append(Component.text(" ",NamedTextColor.RED));
+                                else if(i==wwp.getCausesOfDeath().size()-1){
+                                    if(i==0)c.append(Component.text(" ",NamedTextColor.RED));
+                                    else if(i==1)c.append(Component.text(" and ",NamedTextColor.RED));
+                                    else c.append(Component.text(", and ",NamedTextColor.RED));
+                                }else{
+                                    c.append(Component.text(", ",NamedTextColor.RED));
+                                }
+                                c.append(wwp.getCausesOfDeath().get(i));
+                            }
+                            Bukkit.getServer().broadcast(c);
+                            for(Player p: Bukkit.getOnlinePlayers()){
+                                p.playSound(p.getLocation(),Sound.BLOCK_BELL_USE,1f,0.1f);
+                            }
+                        }
                             plugin.fakeTabManager.removeFakePlayerForEveryone(wwp.getName());
                             plugin.fakeTabManager.addFakePlayerForEveryone(
                                 wwp.getName(),
@@ -90,9 +107,7 @@ public class Handler{
                             Component.text(wwp.getName(),NamedTextColor.GRAY),
                             42
                             );
-                    for(Player p: Bukkit.getOnlinePlayers()){
-                        p.playSound(p.getLocation(),Sound.BLOCK_BELL_USE,1f,0.1f);
-                    }
+                    
                                     
                 }, announceDeadTimerIndex*20);
                             
@@ -312,13 +327,14 @@ public class Handler{
                 break;
             case JUDGMENT:
                 // Initialize judgment phase
+                for(WWPlayer p : game.getWWPlayerList())p.setJudgment(0);
                 for(Player p : Bukkit.getServer().getOnlinePlayers()){
                                     Component title = Component.text(
                             "JUDGMENT",
                             NamedTextColor.LIGHT_PURPLE
                     );
                     Component subtitle = Component.text(
-                            "/ww vote INNOCENT or GUILTY",
+                            "right click on concrete to judge",
                             NamedTextColor.GRAY
                         );
                     
@@ -378,12 +394,30 @@ public class Handler{
 
     Bukkit.getServer().broadcast(message);
                             }
-                            p.setJudgment(0);
                         }
                         if(judgment>0){
                             
                             initPhase(GamePhase.SENTENCE);
+                            sentenced.getRole().lynched=true;
                             if(sentenced.getRole().jester){
+                                for(Player p : Bukkit.getServer().getOnlinePlayers()){
+                                    Component title = Component.text(
+                                        "THE FOOL WAS LYNCHED",
+                                        NamedTextColor.LIGHT_PURPLE
+                                );
+                                Component subtitle = Component.text(
+                                        "L",
+                                        NamedTextColor.GRAY
+                                    );
+                                
+                                Title.Times times = Title.Times.times(
+                                        Duration.ofMillis(500),  // Fade in
+                                        Duration.ofSeconds(3),  // Stay
+                                        Duration.ofMillis(500)  // Fade out
+                                );
+
+                                p.showTitle(Title.title(title, subtitle, times));
+                            }
                                 game.gameEndFlags.add(sentenced.getRole().title.append(Component.text(" "+sentenced.getName(),NamedTextColor.WHITE).append(Component.text(" has won!", NamedTextColor.YELLOW))));
                             }
                         game.killWWPlayer(sentenced);
@@ -782,7 +816,10 @@ public class Handler{
                             if(WWPlayer.getRole().def<1
                             // &&!WWPlayer.getRole().doctored
                         ){
-                               if(!WWPlayer.getRole().doctored) game.killWWPlayer(WWPlayer);
+                               if(!WWPlayer.getRole().doctored){
+                                WWPlayer.appendCauseOfDeath(Component.text("was mauled by werewolves",NamedTextColor.RED));
+                                game.killWWPlayer(WWPlayer);
+                            }
                                else game.knockedOut.add(WWPlayer);
                                 for(Player p : Bukkit.getServer().getOnlinePlayers()){
                                     
@@ -792,7 +829,7 @@ public class Handler{
                                             WWPlayer wwp = game.getWWPlayer(viewer.getName());
                                             if(wwp!=null&&wwp.getRole().werewolf&&wwp.isAlive()){
                                                 viewer.teleport(plugin.sceneManager.getLocation("wolf_den"));
-                                                if(game.blueyMode)
+                                                if(plugin.blueyMode)
                                                     plugin.skinMasker.setSkin(viewer, "bluey");
                                                 else 
                                                     plugin.skinMasker.setSkin(viewer, "werewolf");
@@ -990,7 +1027,7 @@ public class Handler{
 
 public void resetGuillotine(){
     if(plugin.sceneManager.getLocation("guillotine_blade1")==null||plugin.sceneManager.getLocation("guillotine_blade2")==null)return;
-    ExamplePlugin.removeEntitiesWithTag("ww_guillotine");
+    WerewolfPlugin.removeEntitiesWithTag("ww_guillotine");
     bladeVel=0;
     if(sentencedHead!=null){
         sentencedHead.remove();

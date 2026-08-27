@@ -9,7 +9,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 import jenny.werewolf.papermc.plugin.WWPlayer;
 import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
@@ -20,7 +20,7 @@ import jenny.werewolf.papermc.plugin.Perm;
 import java.util.HashMap;
 
 public class PermsCommand {
-    public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("perms")
         .requires(source ->
                 source.getSender() instanceof ConsoleCommandSender

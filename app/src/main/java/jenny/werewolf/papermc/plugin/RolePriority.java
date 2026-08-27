@@ -9,6 +9,7 @@ public class RolePriority{
     public static final int WEREWOLVES_VOTE = 100;
     public static final int SHERIFF_INVESTIGATE = 70;
     public static final int MILKMAN_DELIVER = 15;
-    
+    public static final int JESTER_KILL = 0;
+
     public static final int RESET_TARGET_ATTACKEDSTATE = -9999;
 }

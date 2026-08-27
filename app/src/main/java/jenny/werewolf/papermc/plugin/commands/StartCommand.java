@@ -12,7 +12,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 import jenny.werewolf.papermc.plugin.WWPlayer;
 import jenny.werewolf.papermc.plugin.House;
 import jenny.werewolf.papermc.plugin.Perm;
@@ -26,7 +26,7 @@ import org.bukkit.block.Biome;
 
 
 public class StartCommand {
-    public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("start")
         .requires(source -> {
                 if( source.getSender() instanceof Player p){
@@ -82,7 +82,7 @@ public class StartCommand {
                                 p.playSound(
                                         p.getLocation(),
                                         Sound.BLOCK_END_PORTAL_SPAWN,
-                                        1.0f,  // volume
+                                        0.2f,  // volume
                                         1.0f   // pitch
                                 );
                                 p.getWorld().setGameRule(GameRules.IMMEDIATE_RESPAWN, true);

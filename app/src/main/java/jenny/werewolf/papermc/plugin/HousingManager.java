@@ -40,14 +40,14 @@ public class HousingManager {
     public ArrayList<BlockDisplay> debugBlockDisplays=new ArrayList<>();
 
 
-    ExamplePlugin plugin;
+    WerewolfPlugin plugin;
     Set<String> viewers = new HashSet<String>();
     ArrayList<House> houses = new ArrayList<House>();
     Map<String, House> houseMap = new HashMap<>();
     Map<String, House> ownerMap = new HashMap<>();
     Map<String, House> hoverMap = new HashMap<>();
     
-    public HousingManager(ExamplePlugin plugin) {
+    public HousingManager(WerewolfPlugin plugin) {
         this.plugin = plugin;
         // Initialize housing manager
     }
@@ -213,6 +213,8 @@ public class HousingManager {
             house.ownerBeam = new RotatingGhostBeam(plugin, house.location,Material.LIME_STAINED_GLASS);
             houses.add(house);
             houseMap.put(house.name, house);
+            house.location.setPitch(0f);
+            house.location.setYaw(0f);
             if(debug){
                 setLectern(house.lectern,house.name);
                 setTpout(house.tpout, house.name);

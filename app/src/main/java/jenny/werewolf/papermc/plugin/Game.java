@@ -28,12 +28,11 @@ public class Game {
     private Handler handler;
     private int WWPlayerCount, aliveCount;
     private boolean isGameActive = false;
-    private ExamplePlugin plugin;
+    private WerewolfPlugin plugin;
     public ArrayList<Component> gameEndFlags=new ArrayList<>();
-    public boolean blueyMode=false;
 
 
-    public Game(ExamplePlugin plugin) {
+    public Game(WerewolfPlugin plugin) {
         this.plugin = plugin;
         this.players = new ArrayList<>();
         this.roles = new HashMap<>();
@@ -58,6 +57,7 @@ public class Game {
         }
         //randomize role instances
         Collections.shuffle(roleInstancesList);
+        Collections.shuffle(players);
         int i = 0;
 
 
@@ -231,10 +231,15 @@ public class Game {
     }
     public boolean setWWPlayerVote(WWPlayer wwp, WWPlayer target) {
         if(wwp.getVotedFor() == target) return false;
-        if(wwp.getVotedFor() != null)wwp.getVotedFor().removeVote();
+        if(wwp.getVotedFor() != null){
+            wwp.getVotedFor().removeVote();
+            
+            plugin.votingDisplayManager.setPlayer(wwp.getVotedFor().getName(), wwp.getVotedFor().getVote());
+        }
             wwp.setVotedFor(target);
             target.addVote();
             plugin.votingDisplayManager.setPlayer(target.getName(), target.getVote());
+            
             if(target.getVote()>Math.floor(((double)aliveCount)/2)){
                 plugin.timerInstance.stop();
                 handler.sentenced=target;
@@ -335,15 +340,15 @@ public class Game {
 }
 class Times{
     
-    public static final int FIRSTDAY = 15;
-    public static final int DISCUSSION = 15;
-    public static final int VOTING = 30;
-    public static final int DEFENSE = 15;
-    public static final int JUDGMENT = 30;
+    public static final int FIRSTDAY = 60;
+    public static final int DISCUSSION = 120;
+    public static final int VOTING = 60;
+    public static final int DEFENSE = 20;
+    public static final int JUDGMENT = 20;
     public static final int SENTENCE = 10;
     public static final int DUSK = 15;
-    public static final int NIGHT = 30;
-    public static final int POST_NIGHT = 30;
+    public static final int NIGHT = 60;
+    public static final int POST_NIGHT = 15;
     public static final int DAWN = 15;
 }
 enum GamePhase {

@@ -41,7 +41,7 @@ import java.util.function.BiConsumer;
 
 public final class ControlledInventoryManager implements Listener {
 
-    private final ExamplePlugin plugin;
+    private final WerewolfPlugin plugin;
     private final NamespacedKey controlledBookKey;
     private final int bookSlot;
 
@@ -54,7 +54,7 @@ public final class ControlledInventoryManager implements Listener {
     private final BiConsumer<Player, List<String>> bookUpdateCallback;
 
     public ControlledInventoryManager(
-            ExamplePlugin plugin,
+            WerewolfPlugin plugin,
             int bookSlot,
             BiConsumer<Player, List<String>> bookUpdateCallback
     ) {
@@ -84,7 +84,7 @@ public final class ControlledInventoryManager implements Listener {
     }
 
     public ControlledInventoryManager(
-            ExamplePlugin plugin,
+            WerewolfPlugin plugin,
             int bookSlot
     ) {
         this(plugin, bookSlot, (player, pages) -> {

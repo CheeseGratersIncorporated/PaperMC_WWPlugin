@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import java.util.Collections;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -37,6 +39,7 @@ public abstract class Role {
     public boolean townie=true;
     public boolean jester=false;
     public boolean spectator=false;
+    public boolean lynched=false;
     public int def=0,atk=0;
     public boolean doctored=false, attacked=false, absent=false;
     public WWPlayer player;
@@ -111,6 +114,7 @@ class Spectator extends Role {
     }
 }
 class Jester extends Role {
+    private int kills=1;
     public Jester(){
         this.townie=false;
         this.jester=true;
@@ -127,17 +131,52 @@ class Jester extends Role {
 
     @Override
     public void nightAbility(Handler handler) {
-        // Townie's night ability logic here
+        if(!lynched)return;
+        if(kills<=0)return;
+        if(player.getTarget()==null){
+            
+        Collections.shuffle(handler.game.getWWPlayerList());
+            for(WWPlayer wwp: handler.game.getWWPlayerList()){
+                if(wwp.getJudgment()>=0)player.setTarget(wwp);
+            }
+        }
+        if(player.getTarget()==null){
+            Bukkit.getServer().broadcast(Component.text("funny jester error just occurred and im sad :(",NamedTextColor.RED));
+            return;
+        }
+        handler.pushEvent(WWEvent.of(RolePriority.JESTER_KILL,
+            ()->{
+                if(player.getTarget()!=null){
+                    player.getTarget().appendCauseOfDeath(Component.text("died of guilt",NamedTextColor.RED));
+                    handler.game.killWWPlayer(player.getTarget());
+                    kills--;
+                }
+            }));
+        
     }
 
     @Override
     public void immediateAbility() {
-        // Townie's immediate ability logic here
+        // Werewolf's immediate ability logic here
     }
-
-    public boolean checkTarget(WWPlayer t){return false;}
+    public boolean checkTarget(WWPlayer t){
+        if(!lynched)return false;
+        if(kills<=0)return false;
+        if(player.isAlive())return false;
+        if(t==null)return false;
+        if(!t.isAlive())return false;
+        if(t.getJudgment()<0)return false;
+        return true;
+    }
     public Component getNewTargetResponse(WWPlayer t){
-        return Component.text("You have no ability", NamedTextColor.RED);
+        
+        if(!lynched)return Component.text("get lynched", NamedTextColor.RED);;
+        if(kills<=0)return Component.text("you used your kill already", NamedTextColor.RED);
+        if(player.isAlive())return Component.text("you're alive and also if you're getting this msg smth went wrong", NamedTextColor.RED);
+        if(t==null)return Component.text("choose someone.", NamedTextColor.GREEN);
+        if(!t.isAlive())return Component.text(t.getName() + " is already dead.", NamedTextColor.RED); 
+        if(t.getJudgment()<0)return Component.text(t.getName() + " judged you innocent. They won't die of guilt tonight.", NamedTextColor.RED); 
+        return Component.text("You've decided to target "+ t.getName(), NamedTextColor.GREEN);
     }
 }
 

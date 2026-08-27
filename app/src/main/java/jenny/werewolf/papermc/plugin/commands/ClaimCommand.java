@@ -5,7 +5,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import jenny.werewolf.papermc.plugin.Role;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 import jenny.werewolf.papermc.plugin.Perm;
 
 import org.bukkit.entity.Player;
@@ -18,7 +18,7 @@ import io.papermc.paper.command.brigadier.Commands;
 
 
 public class ClaimCommand {
-    public static LiteralArgumentBuilder<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("claim")
         .requires(source -> {
                 if( source.getSender() instanceof Player p){

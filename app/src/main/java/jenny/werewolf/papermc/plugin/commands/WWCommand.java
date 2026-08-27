@@ -1,7 +1,7 @@
 package jenny.werewolf.papermc.plugin.commands;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import jenny.werewolf.papermc.plugin.ExamplePlugin;
+import jenny.werewolf.papermc.plugin.WerewolfPlugin;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -9,7 +9,7 @@ import jenny.werewolf.papermc.plugin.commands.housing.HousingCommand;
 import jenny.werewolf.papermc.plugin.commands.scene.SceneCommand;
 
 public class WWCommand {
-    public static LiteralCommandNode<CommandSourceStack> create(ExamplePlugin plugin) {
+    public static LiteralCommandNode<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("ww")
         
             .then(PermsCommand.create(plugin))
