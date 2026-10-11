@@ -2,7 +2,6 @@ package io.github.gegagegagega.werewolf.commands.housing;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
-import io.github.gegagegagega.werewolf.Perm;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -16,7 +15,7 @@ public class HousingCommand {
         .requires(source -> {
                 
                 if( source.getSender() instanceof Player p){
-                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
+                    if(plugin.isDev(p))return true;
                 }
                 else return source.getSender() instanceof ConsoleCommandSender;
                 return false;

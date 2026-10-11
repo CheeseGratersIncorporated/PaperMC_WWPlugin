@@ -22,7 +22,7 @@ public class LoadCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    plugin.sceneManager.load();
+                    plugin.scene().load();
                     player.sendMessage(Component.text("loaded" , NamedTextColor.GREEN));
                     
                 }

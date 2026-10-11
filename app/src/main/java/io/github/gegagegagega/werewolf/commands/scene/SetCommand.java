@@ -25,7 +25,7 @@ public class SetCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    plugin.sceneManager.setLocation(name, player.getLocation());
+                    plugin.scene().setLocation(name, player.getLocation());
                     player.sendMessage(Component.text("Set scene location " + name, NamedTextColor.GREEN));
                     
                 }

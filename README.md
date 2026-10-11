@@ -63,21 +63,37 @@ The plugin also implements several systems around the core game logic, including
 
 ## Project Structure
 
+The game is split so the Werewolf rules never touch Minecraft:
+
 ```text
-app/src/main/
-├── java/
-│   └── .../werewolf/
-│       ├── WerewolfPlugin.java
-│       ├── Game.java
-│       ├── Role.java
-│       ├── WWPlayer.java
-│       ├── HousingManager.java
-│       ├── VotingDisplayManager.java
-│       ├── WerewolfVoiceChat.java
-│       └── ...
-└── resources/
-    └── plugin.yml
+core/   pure game logic, no Paper dependency, unit tested
+  Game, PhaseController     players, phases, votes, trials, win checks
+  role/                     Role base class + one class per role, Roles registry
+  night/                    night actions resolved in priority order
+  view/Views                what each player should look like for the current state
+app/    the Paper plugin
+  WerewolfPlugin            wires services, listeners and commands
+  sync/PlayerSync           applies Views to Minecraft (the "update player" step)
+  game/                     GameEffects (one-shot effects), clock, placement, guillotine, world
+  listener/                 join/quit, combat, chat, protection, trial buttons
+  housing/ scene/ display/ inventory/ voice/ commands/
 ```
+
+The flow is always: change game state in `core`, then call `PlayerSync.syncAll()`
+(the game does this for you through `GameListener.onStateChanged`). `PlayerSync`
+works out each player's visibility, name tag, ghost state, skin, tab entry,
+judgment buttons and the house doors from `Views`, and only touches what changed.
+
+Adding things:
+
+* **A role:** subclass `core/role/Role`, override `onNight` (schedule actions with an
+  `ActionPriority`) or `onDusk`, and register it in `Roles`.
+* **A phase effect:** add a case to `GameEffects.onPhaseStarted` or `onTick`.
+* **Something players should look like:** add a field to `PlayerView`, compute it
+  in `Views.of`, and apply it in `PlayerSync`.
+
+Build with `./gradlew build`; run the game logic tests with `./gradlew :core:test`.
+PacketEvents is a required server plugin and Simple Voice Chat is optional.
 
 ## Status
 

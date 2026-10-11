@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
-import io.github.gegagegagega.werewolf.Role;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -20,21 +19,21 @@ public class ClaimCommand {
         return Commands.literal("claim")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if(plugin.gameInstance.getWWPlayer(player.getName())==null){
+                    if(plugin.game().getPlayer(player.getName())==null){
                         player.sendMessage(Component.text("You are not in the game.", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if (!plugin.housingManager.claim(player)) {
+                    if (!plugin.housing().claim(player)) {
                         player.sendMessage(Component.text("Claim failed.", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
-                    }else player.sendMessage(Component.text("You have claimed " + plugin.housingManager.getPlayerClaim(player), NamedTextColor.GREEN));
+                    }else player.sendMessage(Component.text("You have claimed " + plugin.housing().getPlayerClaim(player), NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;
             })
             
             .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -43,17 +42,17 @@ public class ClaimCommand {
                 String name = StringArgumentType.getString(ctx, "name");
                 
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if(plugin.gameInstance.getWWPlayer(player.getName())==null){
+                    if(plugin.game().getPlayer(player.getName())==null){
                         player.sendMessage(Component.text("You are not in the game.", NamedTextColor.RED));
                         return Command.SINGLE_SUCCESS;
                     }
-                    if(!plugin.housingManager.getHouseNames().contains(name)){
+                    if(!plugin.housing().getHouseNames().contains(name)){
                     player.sendMessage(Component.text("House not found!", NamedTextColor.RED));
                     
                     return Command.SINGLE_SUCCESS;
                     }
-                    if (plugin.housingManager.claim(player,name)) {
-                        player.sendMessage(Component.text("You have claimed " + plugin.housingManager.getPlayerClaim(player), NamedTextColor.GREEN));
+                    if (plugin.housing().claim(player,name)) {
+                        player.sendMessage(Component.text("You have claimed " + plugin.housing().getPlayerClaim(player), NamedTextColor.GREEN));
                     } else {
                         player.sendMessage(Component.text("Claim failed.", NamedTextColor.RED));
                     }
