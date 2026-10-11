@@ -9,7 +9,7 @@ import org.joml.Matrix4f;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-import io.github.gegagegagega.werewolf.HousingManager;
+import io.github.gegagegagega.werewolf.housing.HousingManager;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -27,10 +27,10 @@ public class InteriorCommand {
         .executes(ctx -> {
                
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    plugin.housingManager.follow=player;
-                    plugin.housingManager.open=player.getLocation().getBlock().getLocation();
+                    plugin.housing().follow=player;
+                    plugin.housing().open=player.getLocation().getBlock().getLocation();
                     
-             plugin.housingManager.interiorSetDisplay=plugin.housingManager.open.getWorld().spawn(plugin.housingManager.open, BlockDisplay.class, display -> {
+             plugin.housing().interiorSetDisplay=plugin.housing().open.getWorld().spawn(plugin.housing().open, BlockDisplay.class, display -> {
                     display.setBlock(Material.PINK_STAINED_GLASS.createBlockData());
                     display.setBrightness(new Display.Brightness(15, 15));
                     display.setViewRange(256f);
@@ -52,12 +52,12 @@ public class InteriorCommand {
         .executes(ctx -> {
                
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    plugin.housingManager.follow=null;
-                    plugin.housingManager.open=null;
+                    plugin.housing().follow=null;
+                    plugin.housing().open=null;
                     
-             plugin.housingManager.interiorSetDisplay.remove();
+             plugin.housing().interiorSetDisplay.remove();
              
-             plugin.housingManager.interiorSetDisplay=null;
+             plugin.housing().interiorSetDisplay=null;
                         player.sendMessage(Component.text("Interior setting cancelled", NamedTextColor.LIGHT_PURPLE));
                 }
                 return Command.SINGLE_SUCCESS;
@@ -65,7 +65,7 @@ public class InteriorCommand {
         .then(Commands.literal("close")
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -74,13 +74,13 @@ public class InteriorCommand {
                 String name = StringArgumentType.getString(ctx, "name");
 
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    if(player==plugin.housingManager.follow){
-                        plugin.housingManager.follow=null;
-                        plugin.housingManager.addInterior(name);
+                    if(player==plugin.housing().follow){
+                        plugin.housing().follow=null;
+                        plugin.housing().addInterior(name);
                         if(HousingManager.debug)
-                        plugin.housingManager.debugBlockDisplays.add(plugin.housingManager.interiorSetDisplay);
+                        plugin.housing().debugBlockDisplays.add(plugin.housing().interiorSetDisplay);
                         else{
-                            plugin.housingManager.interiorSetDisplay.remove();
+                            plugin.housing().interiorSetDisplay.remove();
                         }
                         player.sendMessage(Component.text("Interior added to "+name, NamedTextColor.LIGHT_PURPLE));
                     }else{
@@ -93,7 +93,7 @@ public class InteriorCommand {
             .then(Commands.literal("delete")
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -102,7 +102,7 @@ public class InteriorCommand {
                 String name = StringArgumentType.getString(ctx, "name");
 
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    plugin.housingManager.deleteInterior(player.getLocation(), name);
+                    plugin.housing().deleteInterior(player.getLocation(), name);
                     
                 }
                 return Command.SINGLE_SUCCESS;

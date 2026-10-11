@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
-import io.github.gegagegagega.werewolf.Role;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -30,9 +29,9 @@ public class SetCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    if (plugin.housingManager.getHouseNames().contains(name)) {
-                        plugin.housingManager.delete(name);
-                    }plugin.housingManager.set(player.getLocation(), name);
+                    if (plugin.housing().getHouseNames().contains(name)) {
+                        plugin.housing().delete(name);
+                    }plugin.housing().set(player.getLocation(), name);
                     player.sendMessage(Component.text("Set house " + name, NamedTextColor.GREEN));
                     
                 }

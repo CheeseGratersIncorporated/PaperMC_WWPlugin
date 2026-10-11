@@ -22,7 +22,7 @@ public class SaveCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    plugin.sceneManager.save();
+                    plugin.scene().save();
                     player.sendMessage(Component.text("saved" , NamedTextColor.GREEN));
                     
                 }

@@ -18,7 +18,7 @@ public class DeleteCommand {
         return Commands.literal("delete")
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -28,8 +28,8 @@ public class DeleteCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    if (plugin.housingManager.getHouseNames().contains(name)) {
-                        plugin.housingManager.delete(name);
+                    if (plugin.housing().getHouseNames().contains(name)) {
+                        plugin.housing().delete(name);
                         player.sendMessage(Component.text("Deleted house " + name, NamedTextColor.GREEN));
                     } else {
                         player.sendMessage(Component.text("House not found!", NamedTextColor.RED));

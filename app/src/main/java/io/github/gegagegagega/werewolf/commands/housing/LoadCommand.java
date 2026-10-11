@@ -16,9 +16,9 @@ public class LoadCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("load")
             .executes(ctx -> {
-                    plugin.housingDataManager.load();
+                    plugin.housingStore().load();
                     
-                    plugin.housingManager.load(plugin.housingDataManager.houses);
+                    plugin.housing().load(plugin.housingStore().houses);
                     
                 if (ctx.getSource().getSender() instanceof Player player) {
                     player.sendMessage(Component.text("Loaded", NamedTextColor.GREEN));

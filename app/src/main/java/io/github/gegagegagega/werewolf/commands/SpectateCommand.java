@@ -7,65 +7,45 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
-import io.github.gegagegagega.werewolf.Perm;
-import io.github.gegagegagega.werewolf.Role;
-import io.github.gegagegagega.werewolf.WWPlayer;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
+import io.github.gegagegagega.werewolf.core.WWPlayer;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+/** {@code /ww spectate <player>}: the dead can teleport to a living player. */
 public class SpectateCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(WerewolfPlugin plugin) {
         return Commands.literal("spectate")
-        .requires(source -> {
-                if( source.getSender() instanceof Player p){
-                    if(plugin.permMap.get(p.getName())==Perm.DEV)return true;
-                    return plugin.gameInstance.getWWPlayer(p.getName()) != null && !plugin.gameInstance.getWWPlayer(p.getName()).isAlive()&&plugin.gameInstance.isActive();
-                }
-                return false;
-        })
-        .then(Commands.argument("name", StringArgumentType.word())
+                .requires(Access.participant(plugin, participant -> !participant.isAlive() && Access.active(plugin)))
+                .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            if (ctx.getSource().getSender() instanceof Player player) {
-                                for (String name : plugin.gameInstance.getWWPlayerNames()) {
-                                    if(plugin.gameInstance.getWWPlayer(name).isAlive())
-                                    builder.suggest(name);
+                            for (WWPlayer participant : plugin.game().getPlayers()) {
+                                if (participant.isAlive()) {
+                                    builder.suggest(participant.getName());
                                 }
-                                
                             }
                             return builder.buildFuture();
                         })
-            .executes(ctx -> {
-                String name =
-                                        StringArgumentType.getString(ctx, "name");
-
-                if (ctx.getSource().getSender() instanceof Player player) {
-                    if (plugin.gameInstance.getWWPlayer(player.getName()) == null) {
-                        player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
-                        return Command.SINGLE_SUCCESS;
-                    }
-                    if (!plugin.gameInstance.getWWPlayerNames().contains(name)) {
-                        player.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
-                        return Command.SINGLE_SUCCESS;
-                    }
-
-                    // if(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name))) {
-                    //     player.sendMessage(Component.text("You are now targeting " + name, NamedTextColor.GREEN));
-                    // }else {
-                    //     player.sendMessage(Component.text("You are already targeting " + name, NamedTextColor.RED));
-                    // }
-                    for(Player p: Bukkit.getOnlinePlayers()){
-                        if(p.getName().equals(name)){
-                            player.teleport(p);
-                            player.sendMessage(Component.text("You are now spectating " + name, NamedTextColor.GREEN));
+                        .executes(ctx -> {
+                            String name = StringArgumentType.getString(ctx, "name");
+                            if (ctx.getSource().getSender() instanceof Player player) {
+                                if (!plugin.game().hasPlayer(player.getName())) {
+                                    player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                                if (!plugin.game().hasPlayer(name)) {
+                                    player.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                                Player target = Bukkit.getPlayerExact(name);
+                                if (target != null) {
+                                    player.teleport(target);
+                                    player.sendMessage(Component.text("You are now spectating " + name, NamedTextColor.GREEN));
+                                }
+                            }
                             return Command.SINGLE_SUCCESS;
-                        }
-                    }
-                    // player.sendMessage(plugin.gameInstance.setWWPlayerTarget(plugin.gameInstance.getWWPlayer(player.getName()), plugin.gameInstance.getWWPlayer(name)));
-                }
-                return Command.SINGLE_SUCCESS;
-            }));
+                        }));
     }
 }

@@ -17,8 +17,8 @@ public class SaveCommand {
         return Commands.literal("save")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    plugin.housingDataManager.houses=plugin.housingManager.getHouses();
-                    plugin.housingDataManager.save();
+                    plugin.housingStore().houses=plugin.housing().getHouses();
+                    plugin.housingStore().save();
                     player.sendMessage(Component.text("Saved", NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;

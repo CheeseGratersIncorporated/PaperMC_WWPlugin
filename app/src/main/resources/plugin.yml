@@ -1,6 +1,6 @@
 name: WerewolfPluginOfDOOM
 version: 1.0.0
-main: jenny.werewolf.papermc.plugin.WerewolfPlugin
+main: io.github.gegagegagega.werewolf.WerewolfPlugin
 description: Werewolf Plugin of DOOM
 author: Gega
 api-version: '26.2'

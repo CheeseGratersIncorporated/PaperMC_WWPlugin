@@ -17,7 +17,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
-import io.github.gegagegagega.werewolf.Role;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -27,7 +26,7 @@ public class DoorCommand {
         return Commands.literal("door")
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -51,15 +50,15 @@ public class DoorCommand {
                          }
 
                                 // Save or manipulate the lectern here
-                                // plugin.housingManager.setLectern(name, block);
-                            if (!plugin.housingManager.getHouseNames().contains(name)) {
+                                // plugin.housing().setLectern(name, block);
+                            if (!plugin.housing().getHouseNames().contains(name)) {
                                 
                                 player.sendMessage(Component.text("House not found.", NamedTextColor.RED));
                                     return Command.SINGLE_SUCCESS;
                             }
                             
                             
-                            plugin.housingManager.setDoor(new Location(player.getWorld(), block.getX(), block.getY(),  block.getZ()), name);
+                            plugin.housing().setDoor(new Location(player.getWorld(), block.getX(), block.getY(),  block.getZ()), name);
                             
                             player.sendMessage(Component.text(
                                     "Set door for " + name

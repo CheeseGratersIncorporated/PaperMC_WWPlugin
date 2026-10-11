@@ -20,7 +20,7 @@ public class TpCommand {
         return Commands.literal("tp")
         .then(Commands.argument("name", StringArgumentType.word())
                 .suggests((ctx, builder) -> {
-                            for (String name : plugin.sceneManager.getLocations().keySet()) {
+                            for (String name : plugin.scene().getLocations().keySet()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -30,10 +30,10 @@ public class TpCommand {
 
                 if (ctx.getSource().getSender() instanceof Player player) {
                     
-                    if (plugin.sceneManager.getLocations().keySet().contains(name)) {
+                    if (plugin.scene().getLocations().keySet().contains(name)) {
                         player.setAllowFlight(true);
                         player.setFlying(true);
-                        player.teleport(plugin.sceneManager.getLocation(name));
+                        player.teleport(plugin.scene().getLocation(name));
                     }
                     
                     player.sendMessage(Component.text("tp go :)", NamedTextColor.YELLOW));

@@ -15,7 +15,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
-import io.github.gegagegagega.werewolf.Role;
 import io.github.gegagegagega.werewolf.WerewolfPlugin;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -25,7 +24,7 @@ public class TpoutCommand {
         return Commands.literal("tpout")
         .then(Commands.argument("name", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
-                            for (String name : plugin.housingManager.getHouseNames()) {
+                            for (String name : plugin.housing().getHouseNames()) {
                                 builder.suggest(name);
                             }
                             return builder.buildFuture();
@@ -44,15 +43,15 @@ public class TpoutCommand {
 
 
                                 // Save or manipulate the lectern here
-                                // plugin.housingManager.setLectern(name, block);
-                            if (!plugin.housingManager.getHouseNames().contains(name)) {
+                                // plugin.housing().setLectern(name, block);
+                            if (!plugin.housing().getHouseNames().contains(name)) {
                                 
                                 player.sendMessage(Component.text("House not found.", NamedTextColor.RED));
                                     return Command.SINGLE_SUCCESS;
                             }
                             
                             
-                            plugin.housingManager.setTpout(player.getLocation(), name);
+                            plugin.housing().setTpout(player.getLocation(), name);
                             
                             player.sendMessage(Component.text(
                                     "Registered tpout for " + name

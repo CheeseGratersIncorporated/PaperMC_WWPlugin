@@ -17,7 +17,7 @@ public class ViewCommand {
         return Commands.literal("view")
             .executes(ctx -> {
                 if (ctx.getSource().getSender() instanceof Player player) {
-                    plugin.housingManager.toggleViewer(player);
+                    plugin.housing().toggleViewer(player);
                     player.sendMessage(Component.text("Toggled Housing View", NamedTextColor.GREEN));
                 }
                 return Command.SINGLE_SUCCESS;

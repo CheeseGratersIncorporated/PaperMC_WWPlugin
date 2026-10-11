@@ -1,6 +1,5 @@
-
 plugins {
-
+    java
 }
 
 repositories {
@@ -14,31 +13,21 @@ repositories {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
-
     maven {
         url = uri("https://repo.codemc.io/repository/maven-releases/")
     }
-
     maven {
         url = uri("https://repo.codemc.io/repository/maven-snapshots/")
     }
 }
 
 dependencies {
-   
-    // compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    implementation(project(":core"))
+
+    // Provided at runtime by the server and the plugins listed in plugin.yml.
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-
-    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
-
-    
-    implementation("de.maxhenkel.voicechat:voicechat-api:2.6.0")
-
-    testImplementation(libs.junit.jupiter)
-
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    implementation(libs.guava)
+    compileOnly(libs.packetevents.spigot)
+    compileOnly(libs.voicechat.api)
 }
 
 java {
@@ -47,7 +36,9 @@ java {
     }
 }
 
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+tasks.jar {
+    // Bundle the game core into the plugin jar.
+    dependsOn(configurations.runtimeClasspath)
+    from({ configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) } })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
